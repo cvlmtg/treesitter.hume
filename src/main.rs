@@ -6,6 +6,7 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::private_intra_doc_links)]
 
+mod bundle;
 mod compile;
 mod git;
 mod invocation;
@@ -14,6 +15,7 @@ mod pins;
 mod probe;
 mod queries;
 mod sources;
+mod sums;
 #[cfg(test)]
 mod test_support;
 mod toolchain;
