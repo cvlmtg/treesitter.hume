@@ -5,7 +5,9 @@ edition = "2024"
 
 [dependencies]
 cc = "1"
+serde = { version = "1.0.229", features = ["derive"] }
 tempfile = "3"
+toml = "1.1.8"
 
 [profile.release]
 lto = true

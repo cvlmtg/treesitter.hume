@@ -90,3 +90,11 @@ jobs:
           version: 0.16.0
 
       - run: cargo test --test zig -- --ignored
+
+  python:
+    name: Python scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - run: python3 -m unittest discover -s scripts/tests

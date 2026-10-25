@@ -7,6 +7,7 @@
 #![deny(rustdoc::private_intra_doc_links)]
 
 mod invocation;
+mod pins;
 mod toolchain;
 
 use std::fmt;

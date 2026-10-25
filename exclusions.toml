@@ -1,0 +1,7 @@
+# Languages a release leaves out, each with the reason. `platforms` names the
+# platforms it applies to, as <os>-<arch>; without it, it applies to all.
+#
+# [[exclude]]
+# name = "example"
+# platforms = ["windows-x86_64"]
+# reason = "its scanner needs a C library function MSVC lacks"

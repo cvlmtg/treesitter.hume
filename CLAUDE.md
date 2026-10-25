@@ -12,7 +12,7 @@ platform; a user on any other platform runs it locally.
   denied in CI, tests exempt).
 - **Testing**: the full suite is, from the repo root, after `cargo fmt`:
 ```
-cargo clippy --all-targets -- -D clippy::unwrap_used && cargo test --all-targets
+cargo clippy --all-targets -- -D clippy::unwrap_used && cargo test --all-targets && python3 -m unittest discover -s scripts/tests
 ```
 - **Commits**: [Conventional Commits](https://www.conventionalcommits.org),
   imperative mood, no trailing period. The body says why.
@@ -23,4 +23,4 @@ The global Documentation audiences rules apply. In this repo:
 1. **End users**: `README.md` (what a release holds, building grammars
    locally, releasing).
 2. **Learners**: none; HUME's `docs/learning/` covers tree-sitter concepts.
-3. **Source readers**: source comments.
+3. **Source readers**: source comments, plus `scripts/README.md`.
