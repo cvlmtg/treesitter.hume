@@ -9,7 +9,9 @@
 mod compile;
 mod git;
 mod invocation;
+mod manifest;
 mod pins;
+mod probe;
 mod queries;
 mod sources;
 #[cfg(test)]
