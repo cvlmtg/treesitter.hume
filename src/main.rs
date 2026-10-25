@@ -9,6 +9,7 @@
 mod git;
 mod invocation;
 mod pins;
+mod queries;
 mod toolchain;
 
 use std::fmt;
