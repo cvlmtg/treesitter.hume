@@ -1,8 +1,8 @@
 use std::ffi::OsString;
 use std::path::Path;
 
+use crate::sources::{Scanner, Sources};
 use crate::toolchain::Flavor;
-use crate::{Scanner, Sources};
 
 /// The argument lists, in run order, that build `sources` into `library`.
 /// Each runs in `work` after the compiler's own arguments.

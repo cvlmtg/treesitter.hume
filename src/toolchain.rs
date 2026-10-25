@@ -2,7 +2,7 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use crate::Error;
+use crate::compile::CompileError;
 
 /// The triple this binary was built for, which is also the one it builds
 /// grammars for: they are loaded into a HUME running on the same machine.
@@ -29,7 +29,7 @@ impl Compiler {
     /// The C++ driver when `cpp`, else the C driver. `CC`/`CXX` override the
     /// platform default, as they do for `cc`'s build scripts, and one that
     /// names zig runs without `cc` (see [`zig`]).
-    pub(crate) fn find(cpp: bool) -> Result<Self, Error> {
+    pub(crate) fn find(cpp: bool) -> Result<Self, CompileError> {
         let named = env_compiler(cpp, |name| std::env::var_os(name));
         if let Some(named) = &named
             && zig::is_zig(&named.program)
@@ -46,7 +46,7 @@ impl Compiler {
     }
 
     /// The driver `cc` chooses, with the flags it would compile with.
-    fn through_cc(cpp: bool) -> Result<Self, Error> {
+    fn through_cc(cpp: bool) -> Result<Self, CompileError> {
         let tool = cc::Build::new()
             .cpp(cpp)
             .cargo_metadata(false)
@@ -57,7 +57,7 @@ impl Compiler {
             .host(TARGET)
             .target(TARGET)
             .try_get_compiler()
-            .map_err(|e| Error::NoCompiler(e.to_string()))?;
+            .map_err(|e| CompileError::NoCompiler(e.to_string()))?;
         // `to_command` is what adds the extra words of `CC`/`CXX` (a wrapper
         // such as `ccache`, or flags), which `path()` and `args()` leave out.
         let command = tool.to_command();
@@ -81,7 +81,7 @@ impl Compiler {
     }
 
     /// Run the driver with `args` after its own, in `cwd`, inheriting stdio.
-    pub(crate) fn run(&self, args: &[OsString], cwd: &Path) -> Result<(), Error> {
+    pub(crate) fn run(&self, args: &[OsString], cwd: &Path) -> Result<(), CompileError> {
         let mut command = Command::new(&self.program);
         command.args(&self.args).args(args).current_dir(cwd);
         for (key, value) in &self.env {
@@ -90,14 +90,14 @@ impl Compiler {
                 None => command.env_remove(key),
             };
         }
-        let status = command.status().map_err(|source| Error::Spawn {
+        let status = command.status().map_err(|source| CompileError::Spawn {
             program: self.program.clone(),
             source,
         })?;
         if status.success() {
             Ok(())
         } else {
-            Err(Error::Failed {
+            Err(CompileError::Failed {
                 program: self.program.clone(),
                 status,
             })

@@ -10,7 +10,7 @@ use std::io;
 use std::process::Command;
 
 use super::{Compiler, Flavor, TARGET, zig};
-use crate::Error;
+use crate::compile::CompileError;
 
 /// A compiler found on `PATH`, in the order they are preferred.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -63,13 +63,13 @@ fn fallback_driver(compiler: WindowsCompiler, cpp: bool) -> Option<Compiler> {
 
 /// A non-MSVC driver, or `None` to let `cc` drive MSVC when it is
 /// installed. Only for an environment that names no compiler.
-pub(super) fn without_msvc(cpp: bool) -> Result<Option<Compiler>, Error> {
+pub(super) fn without_msvc(cpp: bool) -> Result<Option<Compiler>, CompileError> {
     let exists = |name: &str| {
         (name == "cl" && cc::windows_registry::find_tool(TARGET, "cl.exe").is_some())
             || exe_on_path(name)
     };
     let compiler = choose_windows_compiler(exists).ok_or_else(|| {
-        Error::NoCompiler(
+        CompileError::NoCompiler(
             "install one of: MSVC Build Tools, clang, gcc, or zig, and ensure it is on PATH"
                 .to_string(),
         )
