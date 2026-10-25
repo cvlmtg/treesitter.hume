@@ -22,16 +22,29 @@ pub(crate) fn steps(
     }
 }
 
+/// `-fPIC` is spelled out because a driver run without `cc` (see
+/// `Compiler::find`) gets no default flags. Windows code is position
+/// independent without it.
 fn gnu(sources: &Sources, work: &Path, library: &Path) -> Vec<Vec<OsString>> {
-    let common: [OsString; 3] = ["-fno-exceptions".into(), "-I".into(), (&sources.dir).into()];
+    let mut common: Vec<OsString> = vec!["-fno-exceptions".into()];
+    if cfg!(not(windows)) {
+        common.push("-fPIC".into());
+    }
+    common.extend(["-I".into(), (&sources.dir).into()]);
     let mut steps = Vec::new();
     let mut link: Vec<OsString> = vec!["-shared".into()];
     link.extend(common.clone());
     link.extend(["-o".into(), library.into()]);
     if let Some(Scanner::Cpp(scanner)) = &sources.scanner {
         let object = work.join("scanner.o");
-        let mut compile = common.to_vec();
-        compile.extend(["-c".into(), scanner.into(), "-o".into(), (&object).into()]);
+        let mut compile = common;
+        compile.extend([
+            "-std=c++14".into(),
+            "-c".into(),
+            scanner.into(),
+            "-o".into(),
+            (&object).into(),
+        ]);
         steps.push(compile);
         // An object listed after `-xc` would be read as C source.
         link.push(object.into());
@@ -66,7 +79,7 @@ fn msvc(sources: &Sources, work: &Path, library: &Path) -> Vec<Vec<OsString>> {
             let mut fo = OsString::from("/Fo");
             fo.push(&object);
             let mut compile = common.to_vec();
-            compile.extend(["/c".into(), scanner.into(), fo]);
+            compile.extend(["/std:c++14".into(), "/c".into(), scanner.into(), fo]);
             steps.push(compile);
             link.push(object.into());
         }

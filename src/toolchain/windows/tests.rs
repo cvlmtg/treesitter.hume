@@ -36,25 +36,33 @@ fn fallback_driver_leaves_msvc_to_cc() {
     assert_eq!(fallback_driver(WindowsCompiler::Msvc, true), None);
 }
 
+fn gnu(program: &str, args: &[&str]) -> Option<Compiler> {
+    Some(Compiler {
+        program: program.into(),
+        args: args.iter().map(Into::into).collect(),
+        env: Vec::new(),
+        flavor: Flavor::Gnu,
+    })
+}
+
 #[test]
 fn fallback_drivers_name_the_language_driver_and_optimize() {
     let cases = [
-        (WindowsCompiler::Clang, false, "clang", vec!["-O2"]),
-        (WindowsCompiler::Clang, true, "clang++", vec!["-O2"]),
-        (WindowsCompiler::Gcc, false, "gcc", vec!["-O2"]),
+        (WindowsCompiler::Clang, false, gnu("clang", &["-O2"])),
+        (WindowsCompiler::Clang, true, gnu("clang++", &["-O2"])),
+        (WindowsCompiler::Gcc, false, gnu("gcc", &["-O2"])),
         (
             WindowsCompiler::Gcc,
             true,
-            "g++",
-            vec!["-O2", "-static-libgcc", "-static-libstdc++"],
+            gnu("g++", &["-O2", "-static-libgcc", "-static-libstdc++"]),
         ),
-        (WindowsCompiler::Zig, false, "zig", vec!["cc", "-O2"]),
-        (WindowsCompiler::Zig, true, "zig", vec!["c++", "-O2"]),
+        (WindowsCompiler::Zig, false, gnu("zig", &["cc", "-O2"])),
+        (WindowsCompiler::Zig, true, gnu("zig", &["c++", "-O2"])),
     ];
-    for (compiler, cpp, program, args) in cases {
+    for (compiler, cpp, expected) in cases {
         assert_eq!(
             fallback_driver(compiler, cpp),
-            Some((program, args)),
+            expected,
             "{compiler:?} cpp={cpp}"
         );
     }

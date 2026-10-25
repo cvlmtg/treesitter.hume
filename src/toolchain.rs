@@ -16,6 +16,7 @@ pub(crate) enum Flavor {
 }
 
 /// A C or C++ compiler driver, with the arguments and environment it runs with.
+#[derive(Debug, PartialEq, Eq)]
 pub(crate) struct Compiler {
     program: PathBuf,
     args: Vec<OsString>,
@@ -26,12 +27,26 @@ pub(crate) struct Compiler {
 
 impl Compiler {
     /// The C++ driver when `cpp`, else the C driver. `CC`/`CXX` override the
-    /// platform default, as they do for `cc`'s build scripts.
+    /// platform default, as they do for `cc`'s build scripts, and one that
+    /// names zig runs without `cc` (see [`zig`]).
     pub(crate) fn find(cpp: bool) -> Result<Self, Error> {
+        let named = env_compiler(cpp, |name| std::env::var_os(name));
+        if let Some(named) = &named
+            && zig::is_zig(&named.program)
+        {
+            return Ok(zig::driver(&named.program, &named.args));
+        }
         #[cfg(windows)]
-        if let Some(compiler) = windows::without_msvc(cpp)? {
+        if named.is_none()
+            && let Some(compiler) = windows::without_msvc(cpp)?
+        {
             return Ok(compiler);
         }
+        Self::through_cc(cpp)
+    }
+
+    /// The driver `cc` chooses, with the flags it would compile with.
+    fn through_cc(cpp: bool) -> Result<Self, Error> {
         let tool = cc::Build::new()
             .cpp(cpp)
             .cargo_metadata(false)
@@ -90,5 +105,57 @@ impl Compiler {
     }
 }
 
+/// A compiler named in the environment: its program and the words after it.
+#[derive(Debug, PartialEq, Eq)]
+struct EnvCompiler {
+    program: String,
+    args: Vec<String>,
+}
+
+/// The compiler `CC`, or `CXX` when `cpp`, names, read as `cc` reads it.
+///
+/// The first of `<VAR>_<target>`, `<VAR>_<target_with_underscores>`,
+/// `HOST_<VAR>` and `<VAR>` that is set wins, and an empty one names no
+/// compiler (grammars are built for the host, so `cc` never reads
+/// `TARGET_<VAR>`). A value that is an existing path is one word, so it may
+/// hold spaces; any other value splits on whitespace.
+fn env_compiler(cpp: bool, getenv: impl Fn(&str) -> Option<OsString>) -> Option<EnvCompiler> {
+    let var = if cpp { "CXX" } else { "CC" };
+    let names = [
+        format!("{var}_{TARGET}"),
+        format!("{var}_{}", TARGET.replace(['-', '.'], "_")),
+        format!("HOST_{var}"),
+        var.to_string(),
+    ];
+    let value = names.iter().find_map(|name| getenv(name))?;
+    let value = value.to_string_lossy();
+    let value = value.trim();
+    if exists(value) {
+        return Some(EnvCompiler {
+            program: value.to_string(),
+            args: Vec::new(),
+        });
+    }
+    let mut words = value.split_whitespace().map(String::from);
+    Some(EnvCompiler {
+        program: words.next()?,
+        args: words.collect(),
+    })
+}
+
+/// Whether `path` exists, with or without the platform's executable
+/// extension.
+fn exists(path: &str) -> bool {
+    let path = Path::new(path);
+    path.exists()
+        || (!std::env::consts::EXE_EXTENSION.is_empty()
+            && path
+                .with_added_extension(std::env::consts::EXE_EXTENSION)
+                .exists())
+}
+
+#[cfg(test)]
+mod tests;
 #[cfg(windows)]
 mod windows;
+mod zig;

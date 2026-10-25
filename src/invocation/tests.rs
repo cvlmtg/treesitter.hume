@@ -21,17 +21,20 @@ fn strings(steps: Vec<Vec<OsString>>) -> Vec<Vec<String>> {
         .collect()
 }
 
+/// The flags every GNU step starts with.
+fn gnu_common() -> Vec<String> {
+    let mut common = vec!["-fno-exceptions".to_string()];
+    if cfg!(not(windows)) {
+        common.push("-fPIC".to_string());
+    }
+    common.extend(["-I", "/g/src"].map(String::from));
+    common
+}
+
 fn gnu_link(objects_and_sources: &[&str]) -> Vec<String> {
-    let mut link: Vec<String> = [
-        "-shared",
-        "-fno-exceptions",
-        "-I",
-        "/g/src",
-        "-o",
-        "/w/x.so",
-    ]
-    .map(String::from)
-    .to_vec();
+    let mut link = vec!["-shared".to_string()];
+    link.extend(gnu_common());
+    link.extend(["-o", "/w/x.so"].map(String::from));
     link.extend(objects_and_sources.iter().map(|s| s.to_string()));
     if cfg!(target_os = "linux") {
         link.push("-Wl,-z,relro,-z,now".to_string());
@@ -84,17 +87,8 @@ fn gnu_cpp_scanner_is_an_object_linked_before_the_c_sources() {
     );
     let object = Path::new("/w").join("scanner.o");
     let object = object.to_str().expect("test paths are UTF-8");
-    let compile = [
-        "-fno-exceptions",
-        "-I",
-        "/g/src",
-        "-c",
-        "/g/src/scanner.cc",
-        "-o",
-        object,
-    ]
-    .map(String::from)
-    .to_vec();
+    let mut compile = gnu_common();
+    compile.extend(["-std=c++14", "-c", "/g/src/scanner.cc", "-o", object].map(String::from));
     assert_eq!(
         strings(steps),
         vec![
@@ -153,6 +147,7 @@ fn msvc_cpp_scanner_is_an_object_linked_with_the_parser() {
                 "/utf-8",
                 "/I",
                 "/g/src",
+                "/std:c++14",
                 "/c",
                 "/g/src/scanner.cc",
                 &format!("/Fo{object}"),
