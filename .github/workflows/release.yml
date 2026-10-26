@@ -1,0 +1,157 @@
+name: Release
+
+# A tag publishes a release. A manual run builds and verifies every
+# platform's bundle without publishing.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+            target: x86_64-unknown-linux-gnu
+            # Oldest glibc the tool and the grammars run on. Zig links
+            # against this version's symbols instead of the runner's.
+            glibc: '2.28'
+          - os: macos-latest
+            platform: macos-aarch64
+            target: aarch64-apple-darwin
+            # The first macOS release for Apple silicon.
+            minos: '11.0'
+          - os: windows-latest
+            platform: windows-x86_64
+            target: x86_64-pc-windows-msvc
+    defaults:
+      run:
+        shell: bash
+    env:
+      TOOL: target/${{ matrix.target }}/release/hume-grammar-build${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      # Without it, the minimum macOS version of the tool and of every grammar
+      # becomes the runner's SDK version.
+      - if: matrix.minos
+        run: echo "MACOSX_DEPLOYMENT_TARGET=${{ matrix.minos }}" >> "$GITHUB_ENV"
+
+      - if: matrix.glibc
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - if: matrix.glibc
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild@0.23.4
+
+      - name: Build the tool
+        run: cargo ${{ matrix.glibc && 'zigbuild' || 'build' }} --release --locked --target ${{ matrix.target }}${{ matrix.glibc && format('.{0}', matrix.glibc) || '' }}
+
+      - name: Check the tool's glibc floor
+        if: matrix.glibc
+        run: bash scripts/check-glibc-floor.sh ${{ matrix.glibc }} "$TOOL"
+
+      # Set after the tool is built, so only the grammars use it.
+      - name: Compile grammars with zig
+        if: matrix.glibc
+        run: |
+          echo "CC=zig cc -target x86_64-linux-gnu.${{ matrix.glibc }}" >> "$GITHUB_ENV"
+          echo "CXX=zig c++ -target x86_64-linux-gnu.${{ matrix.glibc }}" >> "$GITHUB_ENV"
+
+      - name: Build grammars
+        run: '"$TOOL" build --all --out dist'
+
+      - name: Verify the bundle
+        run: bash scripts/verify-bundle.sh dist ${{ matrix.glibc && format('--glibc {0}', matrix.glibc) || '' }} ${{ matrix.minos && format('--minos {0}', matrix.minos) || '' }}
+
+      - name: Archive the tool
+        if: runner.os != 'Windows'
+        run: tar czf dist/hume-grammar-build-${{ matrix.platform }}.tar.gz -C "$(dirname "$TOOL")" hume-grammar-build
+
+      - name: Archive the tool
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path $env:TOOL -DestinationPath dist/hume-grammar-build-${{ matrix.platform }}.zip
+
+      - name: Report sizes
+        run: ls -l dist
+
+      # Each platform's SHA256SUMS covers only its own files; the publish job
+      # writes the release's.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          path: |
+            dist/*
+            !dist/SHA256SUMS
+          if-no-files-found: error
+
+  publish:
+    name: Publish
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # Archives carry the tag of the tool that built them, which is
+      # v<Cargo.toml version>.
+      - name: Check the tag matches the crate version
+        run: |
+          version="$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -n1)"
+          if [[ "$GITHUB_REF_NAME" != "v$version" ]]; then
+              echo "error: tag $GITHUB_REF_NAME, but Cargo.toml says $version" >&2
+              exit 1
+          fi
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Write SHA256SUMS
+        run: |
+          tar xzf dist/hume-grammar-build-linux-x86_64.tar.gz -C "$RUNNER_TEMP"
+          "$RUNNER_TEMP/hume-grammar-build" sums dist
+          cat dist/SHA256SUMS
+
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/*
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --verify-tag --generate-notes
