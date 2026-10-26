@@ -144,7 +144,7 @@ pub(crate) fn build(request: &Request, git: &Git) -> Result<Report, BuildError> 
         built: Vec::new(),
         failed: Vec::new(),
     };
-    for outcome in run_in_parallel(&repos(&request.languages), &context) {
+    run_in_parallel(&repos(&request.languages), &context, |outcome| {
         for warning in &outcome.warnings {
             eprintln!("warning: {}: {warning}", outcome.language);
         }
@@ -159,7 +159,7 @@ pub(crate) fn build(request: &Request, git: &Git) -> Result<Report, BuildError> 
                 report.failed.push((outcome.language, reason));
             }
         }
-    }
+    });
     report.built.sort();
     report.failed.sort();
     bundle.write(request.out)?;
@@ -188,8 +188,9 @@ fn repos<'a>(languages: &[&'a Pin]) -> Vec<Repo<'a>> {
 }
 
 /// Run every unit of work on as many threads as the machine has cores,
-/// yielding each language's outcome as its unit ends.
-fn run_in_parallel(repos: &[Repo], context: &Context) -> Vec<Outcome> {
+/// handing each language's outcome to `done`, on this thread, as its unit
+/// ends.
+fn run_in_parallel(repos: &[Repo], context: &Context, mut done: impl FnMut(Outcome)) {
     let next = Mutex::new(repos.iter().enumerate());
     let workers = thread::available_parallelism().map_or(1, |n| n.get());
     let (sender, receiver) = mpsc::channel();
@@ -199,7 +200,11 @@ fn run_in_parallel(repos: &[Repo], context: &Context) -> Vec<Outcome> {
             let next = &next;
             scope.spawn(move || {
                 loop {
-                    let Some((id, repo)) = next.lock().expect("no worker panics").next() else {
+                    let Some((id, repo)) = next
+                        .lock()
+                        .expect("taking the next unit cannot panic")
+                        .next()
+                    else {
                         break;
                     };
                     for outcome in build_repo(id, repo, context) {
@@ -211,8 +216,8 @@ fn run_in_parallel(repos: &[Repo], context: &Context) -> Vec<Outcome> {
             });
         }
         drop(sender);
-        receiver.into_iter().collect()
-    })
+        receiver.into_iter().for_each(&mut done);
+    });
 }
 
 /// Fetch `repo`, build each grammar in it, and pack each language that

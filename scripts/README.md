@@ -28,8 +28,8 @@ scripts/verify-bundle.sh <dir> [--glibc <floor>] [--minos <version>]
 Checks each bundle in `<dir>` without the tool's own code: every index
 line's byte range of the tar must hash to the line's digest and unpack to the
 language's library, `queries/highlights.scm`, and a manifest naming that
-language, platform and tag. The tar must hold exactly the members the index
-lists. The release workflow runs it on each platform's bundle before
+language, platform and tag. The tar must hold the members the index lists,
+and no others. The release workflow runs it on each platform's bundle before
 uploading it.
 
 `--glibc` runs `check-glibc-floor.sh` on each Linux library; `--minos`
