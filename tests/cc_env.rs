@@ -21,9 +21,9 @@ fn every_word_of_cc_reaches_the_compiler() {
 
     let status = Command::new(env!("CARGO_BIN_EXE_hume-grammar-build"))
         .env("CC", "cc -DHUME_CC_FLAG")
-        .arg("-o")
-        .arg(&out)
+        .arg("compile")
         .arg(grammar.path())
+        .arg(&out)
         .status()
         .expect("run hume-grammar-build");
 

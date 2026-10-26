@@ -1,6 +1,6 @@
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use crate::compile::CompileError;
 
@@ -80,26 +80,34 @@ impl Compiler {
         self.flavor
     }
 
-    /// Run the driver with `args` after its own, in `cwd`, inheriting stdio.
+    /// Run the driver with `args` after its own, in `cwd`. What it prints
+    /// is kept for the error, not shown, since builds run in parallel.
     pub(crate) fn run(&self, args: &[OsString], cwd: &Path) -> Result<(), CompileError> {
         let mut command = Command::new(&self.program);
-        command.args(&self.args).args(args).current_dir(cwd);
+        command
+            .args(&self.args)
+            .args(args)
+            .current_dir(cwd)
+            .stdin(Stdio::null());
         for (key, value) in &self.env {
             match value {
                 Some(value) => command.env(key, value),
                 None => command.env_remove(key),
             };
         }
-        let status = command.status().map_err(|source| CompileError::Spawn {
+        let output = command.output().map_err(|source| CompileError::Spawn {
             program: self.program.clone(),
             source,
         })?;
-        if status.success() {
+        if output.status.success() {
             Ok(())
         } else {
+            let mut printed = String::from_utf8_lossy(&output.stdout).into_owned();
+            printed.push_str(&String::from_utf8_lossy(&output.stderr));
             Err(CompileError::Failed {
                 program: self.program.clone(),
-                status,
+                status: output.status,
+                output: printed,
             })
         }
     }

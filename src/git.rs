@@ -33,6 +33,15 @@ impl Git {
         }
     }
 
+    /// A `Git` that fails on the first error, for fixtures where a retry
+    /// cannot help.
+    #[cfg(test)]
+    pub(crate) fn without_retries() -> Self {
+        Self {
+            retry_delays: Vec::new(),
+        }
+    }
+
     /// Check out commit `rev` of `url` into the empty or missing directory
     /// `dest`, with no history. With `sparse`, only that directory (and the
     /// files at the root) is checked out, and only its file contents are

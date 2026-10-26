@@ -1,32 +1,12 @@
 use std::fs;
-use std::path::Path;
-use std::process::Command;
 
 use super::*;
+use crate::test_support::{file_url, git, serving_repo};
 
-/// Run git in `dir` for a fixture, panicking on failure.
-fn git(dir: &Path, args: &[&str]) -> String {
-    let output = Command::new("git")
-        .args(["-c", "user.name=t", "-c", "user.email=t@example.com"])
-        .args(args)
-        .current_dir(dir)
-        .output()
-        .expect("run git");
-    assert!(output.status.success(), "git {args:?}: {output:?}");
-    String::from_utf8(output.stdout)
-        .expect("UTF-8")
-        .trim()
-        .to_string()
-}
-
-/// A repository with two commits, serving any commit by SHA as GitHub
-/// does. Returns the directory and the first commit, which is not the tip.
+/// A repository with two commits. Returns the directory and the first commit, which is not the tip.
 fn fixture() -> (tempfile::TempDir, String) {
-    let dir = tempfile::tempdir().expect("fixture dir");
+    let dir = serving_repo();
     let root = dir.path();
-    git(root, &["init", "-q"]);
-    git(root, &["config", "uploadpack.allowAnySHA1InWant", "true"]);
-    git(root, &["config", "uploadpack.allowFilter", "true"]);
     fs::create_dir_all(root.join("runtime/queries/c")).expect("queries dir");
     fs::write(
         root.join("runtime/queries/c/highlights.scm"),
@@ -43,26 +23,11 @@ fn fixture() -> (tempfile::TempDir, String) {
     (dir, first)
 }
 
-fn file_url(path: &Path) -> String {
-    let path = path.to_str().expect("UTF-8 temp path").replace('\\', "/");
-    if path.starts_with('/') {
-        format!("file://{path}")
-    } else {
-        format!("file:///{path}")
-    }
-}
-
-fn quick() -> Git {
-    Git {
-        retry_delays: Vec::new(),
-    }
-}
-
 #[test]
 fn a_checkout_is_of_the_pinned_commit() {
     let (repo, first) = fixture();
     let dest = tempfile::tempdir().expect("dest");
-    quick()
+    Git::without_retries()
         .checkout(&file_url(repo.path()), &first, dest.path(), None)
         .expect("checkout");
     assert_eq!(
@@ -75,7 +40,7 @@ fn a_checkout_is_of_the_pinned_commit() {
 fn a_sparse_checkout_holds_only_its_directory() {
     let (repo, first) = fixture();
     let dest = tempfile::tempdir().expect("dest");
-    quick()
+    Git::without_retries()
         .checkout(
             &file_url(repo.path()),
             &first,
@@ -97,7 +62,7 @@ fn a_sparse_checkout_holds_only_its_directory() {
 fn a_checkout_keeps_line_endings() {
     let (repo, first) = fixture();
     let dest = tempfile::tempdir().expect("dest");
-    quick()
+    Git::without_retries()
         .checkout(&file_url(repo.path()), &first, dest.path(), None)
         .expect("checkout");
     let query = fs::read(dest.path().join("runtime/queries/c/highlights.scm")).expect("query");
@@ -109,7 +74,7 @@ fn an_unknown_commit_is_an_error_naming_it() {
     let (repo, _) = fixture();
     let dest = tempfile::tempdir().expect("dest");
     let missing = "0".repeat(40);
-    let err = quick()
+    let err = Git::without_retries()
         .checkout(&file_url(repo.path()), &missing, dest.path(), None)
         .expect_err("no such commit");
     assert!(err.to_string().contains(&missing), "{err}");

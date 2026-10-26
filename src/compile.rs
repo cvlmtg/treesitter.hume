@@ -17,9 +17,11 @@ pub(crate) enum CompileError {
         program: PathBuf,
         source: io::Error,
     },
+    /// The compiler ran and failed; `output` is what it printed.
     Failed {
         program: PathBuf,
         status: ExitStatus,
+        output: String,
     },
     Io {
         path: PathBuf,
@@ -36,8 +38,17 @@ impl fmt::Display for CompileError {
             Self::Spawn { program, source } => {
                 write!(f, "cannot run {}: {source}", program.display())
             }
-            Self::Failed { program, status } => {
-                write!(f, "{} failed ({status})", program.display())
+            Self::Failed {
+                program,
+                status,
+                output,
+            } => {
+                write!(
+                    f,
+                    "{} failed ({status}):\n{}",
+                    program.display(),
+                    output.trim_end()
+                )
             }
             Self::Io { path, source } => write!(f, "{}: {source}", path.display()),
         }

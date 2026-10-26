@@ -28,9 +28,9 @@ fn zig_builds_a_grammar_with_a_cpp_scanner() {
     let status = Command::new(env!("CARGO_BIN_EXE_hume-grammar-build"))
         .env("CC", "zig cc")
         .env("CXX", "zig c++")
-        .arg("-o")
-        .arg(&out)
+        .arg("compile")
         .arg(grammar.path())
+        .arg(&out)
         .status()
         .expect("run hume-grammar-build");
 

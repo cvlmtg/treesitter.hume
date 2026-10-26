@@ -46,3 +46,14 @@ fn failed_build_keeps_the_previous_library() {
         1
     );
 }
+
+/// The compiler's diagnostics are part of the error, since builds run in
+/// parallel and their output is not shown as it happens.
+#[test]
+fn a_failed_build_reports_what_the_compiler_printed() {
+    let dir = grammar(&[("parser.c", "this is not C\n")]);
+    let out_dir = tempfile::tempdir().expect("out dir");
+    let err = build(dir.path(), &out_dir.path().join("probe.lib"))
+        .expect_err("parser.c does not compile");
+    assert!(err.to_string().contains("parser.c"), "{err}");
+}
