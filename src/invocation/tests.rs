@@ -47,6 +47,7 @@ fn gnu_without_scanner_links_the_parser_alone() {
     let steps = steps(
         Flavor::Gnu,
         &sources(None),
+        None,
         Path::new("/w"),
         Path::new("/w/x.so"),
     );
@@ -62,6 +63,7 @@ fn gnu_c_scanner_is_compiled_with_the_parser() {
     let steps = steps(
         Flavor::Gnu,
         &sources(scanner),
+        None,
         Path::new("/w"),
         Path::new("/w/x.so"),
     );
@@ -82,6 +84,7 @@ fn gnu_cpp_scanner_is_an_object_linked_before_the_c_sources() {
     let steps = steps(
         Flavor::Gnu,
         &sources(scanner),
+        None,
         Path::new("/w"),
         Path::new("/w/x.so"),
     );
@@ -99,11 +102,32 @@ fn gnu_cpp_scanner_is_an_object_linked_before_the_c_sources() {
 }
 
 #[test]
+fn gnu_finalizer_is_compiled_with_the_c_sources() {
+    let steps = steps(
+        Flavor::Gnu,
+        &sources(None),
+        Some(Path::new("/w/finalize.c")),
+        Path::new("/w"),
+        Path::new("/w/x.so"),
+    );
+    assert_eq!(
+        strings(steps),
+        vec![gnu_link(&[
+            "-xc",
+            "-std=c11",
+            "/w/finalize.c",
+            "/g/src/parser.c"
+        ])]
+    );
+}
+
+#[test]
 fn msvc_c_scanner_is_compiled_with_the_parser() {
     let scanner = Some(Scanner::C(PathBuf::from("/g/src/scanner.c")));
     let steps = steps(
         Flavor::Msvc,
         &sources(scanner),
+        None,
         Path::new("/w"),
         Path::new("/w/x.dll"),
     );
@@ -134,6 +158,7 @@ fn msvc_cpp_scanner_is_an_object_linked_with_the_parser() {
     let steps = steps(
         Flavor::Msvc,
         &sources(scanner),
+        None,
         Path::new("/w"),
         Path::new("/w/x.dll"),
     );

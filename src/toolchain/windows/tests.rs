@@ -42,6 +42,7 @@ fn gnu(program: &str, args: &[&str]) -> Option<Compiler> {
         args: args.iter().map(Into::into).collect(),
         env: Vec::new(),
         flavor: Flavor::Gnu,
+        finalizer: None,
     })
 }
 

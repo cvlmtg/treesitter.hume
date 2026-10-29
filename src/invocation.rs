@@ -5,7 +5,8 @@ use crate::sources::{Scanner, Sources};
 use crate::toolchain::Flavor;
 
 /// The argument lists, in run order, that build `sources` into `library`.
-/// Each runs in `work` after the compiler's own arguments.
+/// Each runs in `work` after the compiler's own arguments. `finalizer` is
+/// the file holding `Compiler::finalizer`, compiled with the C sources.
 ///
 /// A C++ scanner is compiled to an object of its own first, since one driver
 /// invocation cannot compile both languages. The link then goes through the
@@ -13,11 +14,12 @@ use crate::toolchain::Flavor;
 pub(crate) fn steps(
     flavor: Flavor,
     sources: &Sources,
+    finalizer: Option<&Path>,
     work: &Path,
     library: &Path,
 ) -> Vec<Vec<OsString>> {
     match flavor {
-        Flavor::Gnu => gnu(sources, work, library),
+        Flavor::Gnu => gnu(sources, finalizer, work, library),
         Flavor::Msvc => msvc(sources, work, library),
     }
 }
@@ -25,7 +27,12 @@ pub(crate) fn steps(
 /// `-fPIC` is spelled out because a driver run without `cc` (see
 /// `Compiler::find`) gets no default flags. Windows code is position
 /// independent without it.
-fn gnu(sources: &Sources, work: &Path, library: &Path) -> Vec<Vec<OsString>> {
+fn gnu(
+    sources: &Sources,
+    finalizer: Option<&Path>,
+    work: &Path,
+    library: &Path,
+) -> Vec<Vec<OsString>> {
     let mut common: Vec<OsString> = vec!["-fno-exceptions".into()];
     if cfg!(not(windows)) {
         common.push("-fPIC".into());
@@ -50,6 +57,9 @@ fn gnu(sources: &Sources, work: &Path, library: &Path) -> Vec<Vec<OsString>> {
         link.push(object.into());
     }
     link.extend(["-xc".into(), "-std=c11".into()]);
+    if let Some(finalizer) = finalizer {
+        link.push(finalizer.into());
+    }
     if let Some(Scanner::C(scanner)) = &sources.scanner {
         link.push(scanner.into());
     }

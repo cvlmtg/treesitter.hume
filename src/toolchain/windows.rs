@@ -47,6 +47,7 @@ fn fallback_driver(compiler: WindowsCompiler, cpp: bool) -> Option<Compiler> {
         args: args.iter().map(Into::into).collect(),
         env: Vec::new(),
         flavor: Flavor::Gnu,
+        finalizer: None,
     };
     match (compiler, cpp) {
         (WindowsCompiler::Msvc, _) => None,

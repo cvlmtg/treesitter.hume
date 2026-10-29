@@ -85,7 +85,21 @@ pub(crate) fn build(grammar_dir: &Path, out: &Path) -> Result<(), CompileError> 
         .tempdir_in(out_dir)
         .map_err(io_error(out_dir))?;
     let library = work.path().join(file_name);
-    for args in invocation::steps(compiler.flavor(), &sources, work.path(), &library) {
+    let finalizer = match compiler.finalizer() {
+        Some(source) => {
+            let path = work.path().join("finalize.c");
+            std::fs::write(&path, source).map_err(io_error(&path))?;
+            Some(path)
+        }
+        None => None,
+    };
+    for args in invocation::steps(
+        compiler.flavor(),
+        &sources,
+        finalizer.as_deref(),
+        work.path(),
+        &library,
+    ) {
         compiler.run(&args, work.path())?;
     }
     std::fs::rename(&library, &out).map_err(io_error(&out))

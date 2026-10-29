@@ -28,4 +28,28 @@ fn the_driver_keeps_every_argument_and_optimizes() {
     );
     assert!(compiler.env.is_empty());
     assert_eq!(compiler.flavor, Flavor::Gnu);
+    assert_eq!(compiler.finalizer, finalizer(TARGET));
+}
+
+#[test]
+fn glibc_targets_link_the_finalizer() {
+    for target in [
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu",
+        "armv7-unknown-linux-gnueabihf",
+    ] {
+        assert_eq!(finalizer(target), Some(FINALIZER), "{target}");
+    }
+}
+
+#[test]
+fn other_targets_link_no_finalizer() {
+    for target in [
+        "aarch64-apple-darwin",
+        "x86_64-pc-windows-msvc",
+        "x86_64-pc-windows-gnu",
+        "x86_64-unknown-linux-musl",
+    ] {
+        assert_eq!(finalizer(target), None, "{target}");
+    }
 }

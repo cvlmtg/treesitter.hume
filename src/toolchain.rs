@@ -23,6 +23,8 @@ pub(crate) struct Compiler {
     /// `None` removes the variable.
     env: Vec<(OsString, Option<OsString>)>,
     flavor: Flavor,
+    /// Only a GNU-flavor driver has one.
+    finalizer: Option<&'static str>,
 }
 
 impl Compiler {
@@ -73,11 +75,18 @@ impl Compiler {
             } else {
                 Flavor::Gnu
             },
+            finalizer: None,
         })
     }
 
     pub(crate) fn flavor(&self) -> Flavor {
         self.flavor
+    }
+
+    /// C source this driver compiles into every library it links (see
+    /// [`zig`]), or `None`.
+    pub(crate) fn finalizer(&self) -> Option<&'static str> {
+        self.finalizer
     }
 
     /// Run the driver with `args` after its own, in `cwd`. What it prints
