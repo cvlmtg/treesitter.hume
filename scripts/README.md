@@ -29,8 +29,10 @@ scripts/verify-bundle.sh <dir> [--glibc <floor>] [--minos <version>]
 
 Checks each bundle in `<dir>` without the tool's own code: every index
 line's byte range of the tar must hash to the line's digest and unpack to the
-language's library, `queries/highlights.scm`, and a manifest naming that
-language, platform and tag. The tar must hold the members the index lists,
+language's library, `queries/highlights.scm`, a manifest naming that
+language, platform and tag, at least one license file beside
+`licenses/SOURCE`, and a `queries/NOTICE` naming the MPL-2.0 and the
+manifest's Helix commit. The tar must hold the members the index lists,
 and no others. The release workflow runs it on each platform's bundle before
 uploading it.
 

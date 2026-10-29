@@ -14,7 +14,7 @@ your machine.
 |---|---|
 | `grammars-<os>-<arch>.tar` | Every grammar for one platform, one `<language>.tar.gz` each |
 | `grammars-<os>-<arch>.index` | Where each grammar starts in that tar, and its SHA-256 |
-| `hume-grammar-build-<os>-<arch>.tar.gz` (`.zip` on Windows) | The build tool |
+| `hume-grammar-build-<os>-<arch>.tar.gz` (`.zip` on Windows) | The build tool, with its `LICENSE` and `THIRD-PARTY-LICENSES` |
 | `SHA256SUMS` | The SHA-256 of every file above |
 
 Each `<language>.tar.gz` holds:
@@ -24,7 +24,15 @@ Each `<language>.tar.gz` holds:
   with `; inherits:` already resolved;
 - `manifest.scm`, which names the language, its grammar's source and commit,
   the C symbol to load, the tree-sitter ABI, the platform, the release tag and
-  the Helix commit the queries come from.
+  the Helix commit the queries come from;
+- `licenses/`, the grammar's license files, and `licenses/SOURCE`, which says
+  where the grammar's source code is;
+- `queries/NOTICE`: the query files are under the
+  [Mozilla Public License 2.0](https://mozilla.org/MPL/2.0/), like the rest of
+  Helix.
+
+A grammar whose repository has no license file is left out of the release,
+since nothing grants the right to redistribute it.
 
 The index's first line is `treesitter.hume <tag> <os>-<arch>`. Every other
 line is `<language> <offset> <size> <sha256>`, so one grammar can be fetched
