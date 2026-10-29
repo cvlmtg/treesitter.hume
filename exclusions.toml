@@ -5,3 +5,47 @@
 # name = "example"
 # platforms = ["windows-x86_64"]
 # reason = "its scanner needs a C library function MSVC lacks"
+
+[[exclude]]
+name = "adl"
+reason = "no license file at the pinned commit, so nothing grants the right to redistribute it"
+
+[[exclude]]
+name = "eex"
+reason = "no license file at the pinned commit, so nothing grants the right to redistribute it"
+
+[[exclude]]
+name = "groovy"
+reason = "no license file at the pinned commit, so nothing grants the right to redistribute it"
+
+[[exclude]]
+name = "hyprlang"
+reason = "no license file at the pinned commit, so nothing grants the right to redistribute it"
+
+[[exclude]]
+name = "lpf"
+reason = "no license file at the pinned commit, so nothing grants the right to redistribute it"
+
+[[exclude]]
+name = "p"
+reason = "no license file at the pinned commit, so nothing grants the right to redistribute it"
+
+[[exclude]]
+name = "ptx"
+reason = "no license file at the pinned commit, so nothing grants the right to redistribute it"
+
+[[exclude]]
+name = "slint"
+reason = "no license file at the pinned commit, so nothing grants the right to redistribute it"
+
+[[exclude]]
+name = "supercollider"
+reason = "no license file at the pinned commit, so nothing grants the right to redistribute it"
+
+[[exclude]]
+name = "wren"
+reason = "no license file at the pinned commit, so nothing grants the right to redistribute it"
+
+[[exclude]]
+name = "xwiki"
+reason = "no license file at the pinned commit, so nothing grants the right to redistribute it"

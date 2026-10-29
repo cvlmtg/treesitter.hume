@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Check every bundle in <dir> through its index alone, as a client reads it:
 # each member's byte range must hash to its digest and unpack to the
-# language's library, queries and a manifest naming that language and
-# platform. --glibc checks each Linux library against a glibc floor, --minos
-# each macOS library's minimum OS version.
+# language's library, queries and a manifest naming that language, platform
+# and tag, to its grammar's license files beside licenses/SOURCE, and to a
+# queries/NOTICE naming the MPL-2.0 and the manifest's Helix commit.
+# --glibc checks each Linux library against a glibc floor, --minos each
+# macOS library's minimum OS version.
 # Usage: verify-bundle.sh <dir> [--glibc <floor>] [--minos <version>]
 set -euo pipefail
 
@@ -76,6 +78,15 @@ for index in "${indexes[@]}"; do
             || fail "$language: manifest names another platform"
         grep -qF "(tag . \"$tag\")" "$unpacked/manifest.scm" \
             || fail "$language: manifest names another tag"
+        [[ -f "$unpacked/licenses/SOURCE" ]] || fail "$language: no licenses/SOURCE"
+        find "$unpacked/licenses" -type f ! -path "$unpacked/licenses/SOURCE" | grep -q . \
+            || fail "$language: no license file under licenses/"
+        helix_rev="$(grep -o '(helix-rev \. "[0-9a-f]*")' "$unpacked/manifest.scm" | cut -d'"' -f2)"
+        [[ -n "$helix_rev" ]] || fail "$language: manifest names no Helix commit"
+        [[ -f "$unpacked/queries/NOTICE" ]] || fail "$language: no queries/NOTICE"
+        grep -qF "Mozilla Public License 2.0" "$unpacked/queries/NOTICE" \
+            && grep -qF "$helix_rev" "$unpacked/queries/NOTICE" \
+            || fail "$language: queries/NOTICE does not name the MPL-2.0 and Helix $helix_rev"
         if [[ -n "$glibc" ]]; then
             bash "$scripts/check-glibc-floor.sh" "$glibc" "$library" >/dev/null \
                 || fail "$language: needs a newer glibc than $glibc"

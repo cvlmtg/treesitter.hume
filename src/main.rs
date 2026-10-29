@@ -8,6 +8,7 @@ mod bundle;
 mod compile;
 mod git;
 mod invocation;
+mod licenses;
 mod manifest;
 mod pins;
 mod pipeline;

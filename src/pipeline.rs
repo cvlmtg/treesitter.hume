@@ -2,10 +2,10 @@
 //!
 //! Helix's queries are checked out once. Each distinct grammar repository
 //! is a unit of work, run in parallel with the others: one fetch, one
-//! compile per subpath, then a probe, resolved queries and a manifest for
-//! each language that uses it, packed into that language's archive. The
-//! checkout is removed when its unit ends, so disk use stays bounded by the
-//! number of workers.
+//! compile per subpath, then a probe, resolved queries, a manifest and
+//! license notices for each language that uses it, packed into that
+//! language's archive. The checkout is removed when its unit ends, so disk
+//! use stays bounded by the number of workers.
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -19,6 +19,7 @@ use std::thread;
 use crate::bundle::{self, Bundle, BundleError};
 use crate::compile;
 use crate::git::{Git, GitError};
+use crate::licenses;
 use crate::manifest::Manifest;
 use crate::pins::Pin;
 use crate::probe;
@@ -250,7 +251,7 @@ fn build_repo(id: usize, repo: &Repo, context: &Context) -> Vec<Outcome> {
             });
             let mut warnings = Vec::new();
             let archive = match library {
-                Ok(library) => package(pin, library, context, &mut warnings),
+                Ok(library) => package(pin, &source, library, context, &mut warnings),
                 Err(reason) => Err(reason.clone()),
             };
             Outcome {
@@ -268,13 +269,17 @@ fn build_repo(id: usize, repo: &Repo, context: &Context) -> Vec<Outcome> {
     outcomes
 }
 
-/// `pin`'s archive: its library, its resolved queries and its manifest.
+/// `pin`'s archive: its library, its resolved queries, its manifest, and
+/// the license files and notices for what it redistributes. `checkout` is
+/// the grammar's repository.
 fn package(
     pin: &Pin,
+    checkout: &Path,
     library: &Path,
     context: &Context,
     warnings: &mut Vec<String>,
 ) -> Result<Vec<u8>, String> {
+    let licenses = licenses::grammar(pin, checkout).map_err(|e| e.to_string())?;
     let abi = probe::abi(library, &pin.symbol).map_err(|e| e.to_string())?;
     let request = context.request;
     let manifest = Manifest {
@@ -299,6 +304,11 @@ fn package(
             library_bytes,
         ),
     ];
+    files.extend(licenses);
+    files.push((
+        "queries/NOTICE".to_string(),
+        licenses::queries_notice(&pin.name, request.helix_url, request.helix_rev).into_bytes(),
+    ));
     let dir = context.queries.join(&pin.name);
     let names = queries::query_files(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     for file in names {

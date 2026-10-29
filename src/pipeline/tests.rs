@@ -21,8 +21,8 @@ fn repo(files: &[(&str, &[u8])]) -> (tempfile::TempDir, String) {
     (dir, rev)
 }
 
-/// The generated probe grammar, as a repository.
-fn grammar_repo() -> (tempfile::TempDir, String) {
+/// The generated probe grammar, plus `extra` files, as a repository.
+fn grammar_repo(extra: &[(&str, &[u8])]) -> (tempfile::TempDir, String) {
     let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/probe");
     let files: Vec<(String, Vec<u8>)> = [
         "grammar.js",
@@ -39,10 +39,11 @@ fn grammar_repo() -> (tempfile::TempDir, String) {
         )
     })
     .collect();
-    let files: Vec<(&str, &[u8])> = files
+    let mut files: Vec<(&str, &[u8])> = files
         .iter()
         .map(|(path, contents)| (path.as_str(), contents.as_slice()))
         .collect();
+    files.extend_from_slice(extra);
     repo(&files)
 }
 
@@ -134,7 +135,7 @@ fn text(files: &[(String, Vec<u8>)], path: &str) -> String {
 
 #[test]
 fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
-    let (grammar, grammar_rev) = grammar_repo();
+    let (grammar, grammar_rev) = grammar_repo(&[("LICENSE", b"MIT terms\n")]);
     let (helix, helix_rev) = helix_repo();
     let url = file_url(grammar.path());
     let pins = pins(
@@ -153,12 +154,18 @@ fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
     assert_eq!(
         paths,
         [
+            "licenses/LICENSE",
+            "licenses/SOURCE",
             "manifest.scm",
             library.as_str(),
+            "queries/NOTICE",
             "queries/highlights.scm",
             "queries/textobjects.scm",
         ]
     );
+    assert_eq!(text(&probe, "licenses/LICENSE"), "MIT terms\n");
+    assert!(text(&probe, "licenses/SOURCE").contains(&grammar_rev));
+    assert!(text(&probe, "queries/NOTICE").contains(&helix_rev));
     assert_eq!(
         text(&probe, "queries/highlights.scm"),
         "\n(source) @base\n\n(word) @variable\n"
@@ -191,7 +198,7 @@ fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
 
 #[test]
 fn a_language_that_fails_leaves_the_others_built() {
-    let (grammar, grammar_rev) = grammar_repo();
+    let (grammar, grammar_rev) = grammar_repo(&[("LICENSE", b"MIT terms\n")]);
     let (helix, helix_rev) = helix_repo();
     let pins = pins(
         &helix_rev,
@@ -218,6 +225,32 @@ fn a_language_that_fails_leaves_the_others_built() {
     );
     let index = fs::read_to_string(out.path().join("grammars-test-arch.index")).expect("index");
     assert_eq!(index.lines().count(), 2, "{index}");
+}
+
+#[test]
+fn a_grammar_without_a_license_file_fails_and_leaves_the_others_built() {
+    let (licensed, licensed_rev) = grammar_repo(&[("LICENSE", b"MIT terms\n")]);
+    let (unlicensed, unlicensed_rev) = grammar_repo(&[]);
+    let (helix, helix_rev) = helix_repo();
+    let pins = pins(
+        &helix_rev,
+        &[
+            ("probe", &file_url(licensed.path()), &licensed_rev),
+            ("twin", &file_url(unlicensed.path()), &unlicensed_rev),
+        ],
+    );
+    let out = tempfile::tempdir().expect("out");
+
+    let report = run(&pins, helix.path(), out.path()).expect("build");
+
+    assert_eq!(report.built, ["probe"]);
+    assert_eq!(
+        report.failed,
+        [(
+            "twin".to_string(),
+            format!("no license file in the repository root at {unlicensed_rev}")
+        )]
+    );
 }
 
 #[test]
