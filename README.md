@@ -81,3 +81,7 @@ hume-grammar-build compile path/to/tree-sitter-mylang mylang.so
   `v<version>` and push the tag. The release workflow builds every
   platform, verifies each bundle and publishes the release. Running the
   workflow by hand on a branch builds and verifies without publishing.
+
+## License
+
+MIT. See `LICENSE`.
