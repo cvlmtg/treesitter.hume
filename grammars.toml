@@ -388,13 +388,6 @@ subpath = ""
 symbol = "tree_sitter_doxyfile"
 
 [[language]]
-name = "drools"
-url = "https://github.com/iByteABit256/tree-sitter-drools"
-rev = "f1404d2a3974dfcfd4193246e763edeeb4b399c1"
-subpath = ""
-symbol = "tree_sitter_drools"
-
-[[language]]
 name = "dtd"
 url = "https://github.com/KMikeeU/tree-sitter-dtd"
 rev = "6116becb02a6b8e9588ef73d300a9ba4622e156f"

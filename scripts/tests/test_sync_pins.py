@@ -34,7 +34,7 @@ GRAMMARS = [
 
 
 def pin_of(language):
-    pins = sync.parse_pins(doc([language], GRAMMARS))
+    pins = sync.parse_pins(doc([language], GRAMMARS), {language["name"]})
     return pins[0] if pins else None
 
 
@@ -69,18 +69,43 @@ class ParsePins(unittest.TestCase):
         self.assertIsNone(pin_of({"name": "cabal"}))
         self.assertIsNone(pin_of({"name": "local"}))
 
+    def test_a_language_helix_ships_no_highlights_for_has_no_pin(self):
+        self.assertEqual(sync.parse_pins(doc([{"name": "javascript"}], GRAMMARS), set()), [])
+
     def test_pins_are_sorted_by_name(self):
-        pins = sync.parse_pins(doc([{"name": "jsx", "grammar": "javascript"}, {"name": "javascript"}], GRAMMARS))
+        languages = [{"name": "jsx", "grammar": "javascript"}, {"name": "javascript"}]
+        pins = sync.parse_pins(doc(languages, GRAMMARS), {"jsx", "javascript"})
         self.assertEqual([pin["name"] for pin in pins], ["javascript", "jsx"])
 
     def test_an_abbreviated_rev_is_fatal(self):
         grammars = [{"name": "short", "source": {"git": "https://s", "rev": "abc123"}}]
         with self.assertRaises(SystemExit):
-            sync.parse_pins(doc([{"name": "short"}], grammars))
+            sync.parse_pins(doc([{"name": "short"}], grammars), {"short"})
 
     def test_an_invalid_language_name_is_fatal(self):
         with self.assertRaises(SystemExit):
-            sync.parse_pins(doc([{"name": "Java Script", "grammar": "javascript"}], GRAMMARS))
+            sync.parse_pins(doc([{"name": "Java Script", "grammar": "javascript"}], GRAMMARS), {"Java Script"})
+
+
+class HighlightedLanguages(unittest.TestCase):
+    def tree(self, *paths, truncated=False):
+        return {"truncated": truncated, "tree": [{"path": path} for path in paths]}
+
+    def test_languages_with_a_highlights_file_under_runtime_queries(self):
+        tree = self.tree(
+            "runtime/queries/rust",
+            "runtime/queries/rust/highlights.scm",
+            "runtime/queries/rust/injections.scm",
+            "runtime/queries/_jsx/highlights.scm",
+            "runtime/queries/drools/injections.scm",
+            "runtime/queries/deep/nested/highlights.scm",
+            "book/runtime/queries/ruby/highlights.scm",
+        )
+        self.assertEqual(sync.highlighted_languages(tree), {"rust", "_jsx"})
+
+    def test_a_truncated_tree_is_fatal(self):
+        with self.assertRaises(SystemExit):
+            sync.highlighted_languages(self.tree("runtime/queries/rust/highlights.scm", truncated=True))
 
 
 class EmitPins(unittest.TestCase):

@@ -5,8 +5,8 @@ Usage: scripts/sync-pins.py [--helix <40-hex commit>]
 
 Reads Helix's languages.toml at `--helix`, or at the `helix-rev` grammars.toml
 already holds, and writes one pin per language whose grammar has a git
-source: its url, rev, subpath and C symbol. Idempotent: running twice
-produces a byte-identical file.
+source and for which Helix ships a highlights.scm: its url, rev, subpath and
+C symbol. Idempotent: running twice produces a byte-identical file.
 """
 
 from __future__ import annotations
@@ -38,6 +38,8 @@ LANGUAGE_NAME = re.compile(r"[a-z0-9_-][a-z0-9._-]*")
 
 FULL_REV = re.compile(r"[0-9a-f]{40}")
 
+HIGHLIGHTS = re.compile(r"runtime/queries/([^/]+)/highlights\.scm")
+
 
 def fetch_languages_toml(rev: str) -> dict:
     url = f"https://raw.githubusercontent.com/helix-editor/helix/{rev}/languages.toml"
@@ -47,6 +49,25 @@ def fetch_languages_toml(rev: str) -> dict:
             return tomllib.loads(response.read().decode())
     except URLError as e:
         sys.exit(f"error: failed to fetch {url}: {e}")
+
+
+def fetch_tree(rev: str) -> dict:
+    url = f"https://api.github.com/repos/helix-editor/helix/git/trees/{rev}?recursive=1"
+    print(f"fetching {url}", file=sys.stderr)
+    request = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json"})
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return json.load(response)
+    except URLError as e:
+        sys.exit(f"error: failed to fetch {url}: {e}")
+
+
+def highlighted_languages(tree: dict) -> set[str]:
+    """The languages with a `runtime/queries/<language>/highlights.scm` in a
+    GitHub recursive tree listing."""
+    if tree.get("truncated"):
+        sys.exit("error: GitHub truncated Helix's file tree, so its query list is incomplete")
+    return {match[1] for entry in tree["tree"] if (match := HIGHLIGHTS.fullmatch(entry["path"]))}
 
 
 def git_grammars(doc: dict) -> dict[str, dict]:
@@ -67,8 +88,9 @@ def git_grammars(doc: dict) -> dict[str, dict]:
     return grammars
 
 
-def parse_pins(doc: dict) -> list[dict]:
-    """One pin per language whose grammar has a git source, sorted by name.
+def parse_pins(doc: dict, highlighted: set[str]) -> list[dict]:
+    """One pin per language whose grammar has a git source and that is in
+    `highlighted`, sorted by name.
 
     A language uses the grammar of its own name unless it names another, and
     the C symbol comes from the grammar's name, so a language that borrows a
@@ -84,6 +106,9 @@ def parse_pins(doc: dict) -> list[dict]:
         grammar = grammars.get(grammar_name)
         if grammar is None:
             print(f"  skip language '{name}': grammar '{grammar_name}' has no git source", file=sys.stderr)
+            continue
+        if name not in highlighted:
+            print(f"  skip language '{name}': Helix ships no highlights.scm for it", file=sys.stderr)
             continue
         if not LANGUAGE_NAME.fullmatch(name):
             sys.exit(f"error: language name '{name}' does not match {LANGUAGE_NAME.pattern}")
@@ -126,7 +151,7 @@ def main() -> None:
     if not FULL_REV.fullmatch(helix_rev):
         sys.exit(f"error: Helix rev '{helix_rev}' is not a full commit SHA")
 
-    pins = parse_pins(fetch_languages_toml(helix_rev))
+    pins = parse_pins(fetch_languages_toml(helix_rev), highlighted_languages(fetch_tree(helix_rev)))
     tmp = GRAMMARS_TOML.with_suffix(".toml.tmp")
     tmp.write_text(emit_pins(helix_rev, pins), encoding="utf-8")
     os.replace(tmp, GRAMMARS_TOML)

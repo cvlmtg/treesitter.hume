@@ -3,9 +3,11 @@
 ## sync-pins.py
 
 Regenerates `grammars.toml` from Helix's `languages.toml`. Each language
-whose grammar Helix fetches from git gets one pin: the grammar's url, commit
-and subpath, and its C symbol, `tree_sitter_` plus the grammar's name with
-`-` turned into `_`. A language that borrows another's grammar (`jsx` uses
+whose grammar Helix fetches from git, and for which Helix ships a
+`highlights.scm`, gets one pin: the grammar's url, commit and subpath, and
+its C symbol, `tree_sitter_` plus the grammar's name with `-` turned into
+`_`. The script lists Helix's queries with one GitHub API request and names
+each language it skips. A language that borrows another's grammar (`jsx` uses
 `javascript`) gets that grammar's source and symbol, so it still builds as an
 archive of its own, with its own queries.
 
