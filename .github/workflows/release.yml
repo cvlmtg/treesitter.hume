@@ -70,8 +70,16 @@ jobs:
         with:
           tool: cargo-zigbuild@0.23.4
 
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about@0.9.3
+
       - name: Build the tool
         run: cargo ${{ matrix.glibc && 'zigbuild' || 'build' }} --release --locked --target ${{ matrix.target }}${{ matrix.glibc && format('.{0}', matrix.glibc) || '' }}
+
+      # Fails on a dependency whose license about.toml does not accept.
+      - name: List the tool's third-party licenses
+        run: cargo about generate --locked --fail --target ${{ matrix.target }} about.hbs -o THIRD-PARTY-LICENSES
 
       - name: Check the tool's glibc floor
         if: matrix.glibc
@@ -92,12 +100,15 @@ jobs:
 
       - name: Archive the tool
         if: runner.os != 'Windows'
-        run: tar czf dist/hume-grammar-build-${{ matrix.platform }}.tar.gz -C "$(dirname "$TOOL")" hume-grammar-build
+        run: >-
+          tar czf dist/hume-grammar-build-${{ matrix.platform }}.tar.gz
+          -C "$(dirname "$TOOL")" hume-grammar-build
+          -C "$GITHUB_WORKSPACE" LICENSE THIRD-PARTY-LICENSES
 
       - name: Archive the tool
         if: runner.os == 'Windows'
         shell: pwsh
-        run: Compress-Archive -Path $env:TOOL -DestinationPath dist/hume-grammar-build-${{ matrix.platform }}.zip
+        run: Compress-Archive -Path $env:TOOL, LICENSE, THIRD-PARTY-LICENSES -DestinationPath dist/hume-grammar-build-${{ matrix.platform }}.zip
 
       - name: Report sizes
         run: ls -l dist

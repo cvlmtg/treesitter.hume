@@ -1,0 +1,5 @@
+# cargo-about: the licenses it may use to cover a dependency of the tool, in
+# order of preference, for the THIRD-PARTY-LICENSES file the release ships.
+accepted = ["MIT", "Apache-2.0", "Zlib", "ISC", "Unicode-3.0"]
+ignore-build-dependencies = true
+ignore-dev-dependencies = true

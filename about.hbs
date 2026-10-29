@@ -1,0 +1,16 @@
+Third-party licenses of hume-grammar-build
+
+The hume-grammar-build binary contains code from the Rust crates below. Each
+license's text follows the crates it covers.
+{{#each licenses}}
+
+================================================================================
+{{name}}
+
+Used by:
+{{#each used_by}}
+  {{crate.name}} {{crate.version}}
+{{/each}}
+
+{{{text}}}
+{{/each}}
