@@ -93,21 +93,25 @@ fn run(pins: &Pins, helix: &Path, out: &Path) -> Result<Report, BuildError> {
     )
 }
 
-/// The member for `language`, read through the index as a client would.
+/// `language`'s archive in `out`.
 fn member(out: &Path, language: &str) -> Vec<u8> {
-    let index = fs::read_to_string(out.join("grammars-test-arch.index")).expect("index");
-    let tar = fs::read(out.join("grammars-test-arch.tar")).expect("tar");
-    let line = index
-        .lines()
-        .find(|line| line.starts_with(&format!("{language} ")))
-        .unwrap_or_else(|| panic!("{language} in the index"));
-    let fields: Vec<usize> = line
-        .split(' ')
-        .skip(1)
-        .take(2)
-        .map(|field| field.parse().expect("number"))
+    fs::read(out.join(format!("{language}.tar.gz"))).expect("archive")
+}
+
+/// The names of the files in `out`, sorted.
+fn listing(out: &Path) -> Vec<String> {
+    let mut names: Vec<String> = fs::read_dir(out)
+        .expect("out")
+        .map(|entry| {
+            entry
+                .expect("entry")
+                .file_name()
+                .to_string_lossy()
+                .into_owned()
+        })
         .collect();
-    tar[fields[0]..fields[0] + fields[1]].to_vec()
+    names.sort();
+    names
 }
 
 /// `(path, text)` for each file in a language archive.
@@ -143,6 +147,7 @@ fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
         &[("probe", &url, &grammar_rev), ("twin", &url, &grammar_rev)],
     );
     let out = tempfile::tempdir().expect("out");
+    fs::write(out.path().join("c.tar.gz"), b"an earlier build").expect("earlier archive");
 
     let report = run(&pins, helix.path(), out.path()).expect("build");
 
@@ -188,12 +193,11 @@ fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
         ),
         "(word) @string\n"
     );
-    let sums = fs::read_to_string(out.path().join("SHA256SUMS")).expect("sums");
-    let summed: Vec<&str> = sums.lines().map(|line| &line[66..]).collect();
     assert_eq!(
-        summed,
-        ["grammars-test-arch.index", "grammars-test-arch.tar"]
+        listing(out.path()),
+        ["c.tar.gz", "probe.tar.gz", "twin.tar.gz"]
     );
+    assert_eq!(member(out.path(), "c"), b"an earlier build");
 }
 
 #[test]
@@ -223,8 +227,7 @@ fn a_language_that_fails_leaves_the_others_built() {
         "{:?}",
         report.failed
     );
-    let index = fs::read_to_string(out.path().join("grammars-test-arch.index")).expect("index");
-    assert_eq!(index.lines().count(), 2, "{index}");
+    assert_eq!(listing(out.path()), ["probe.tar.gz"]);
 }
 
 #[test]

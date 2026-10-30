@@ -93,7 +93,10 @@ jobs:
           echo "CXX=zig c++ -target x86_64-linux-gnu.${{ matrix.glibc }}" >> "$GITHUB_ENV"
 
       - name: Build grammars
-        run: '"$TOOL" build --all --out dist'
+        run: '"$TOOL" build --all --out grammars'
+
+      - name: Bundle grammars
+        run: '"$TOOL" bundle grammars dist'
 
       - name: Verify the bundle
         run: bash scripts/verify-bundle.sh dist ${{ matrix.glibc && format('--glibc {0}', matrix.glibc) || '' }} ${{ matrix.minos && format('--minos {0}', matrix.minos) || '' }}

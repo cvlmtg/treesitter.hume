@@ -67,10 +67,11 @@ hume-grammar-build build rust python markdown markdown.inline
 hume-grammar-build build --all --out ~/hume-grammars
 ```
 
-The output folder, `dist` unless `--out` names another, is laid out like a
-release: a tar, its index and `SHA256SUMS`. Building into the same folder
-again adds languages to it. A language that fails to build is reported at
-the end, and the others are still written.
+The output folder, `dist` unless `--out` names another, gets one
+`<language>.tar.gz` per grammar, the same archive a release holds. HUME
+installs from that folder as it is. Building into the same folder again adds
+languages to it, and replaces the ones built again. A language that fails to
+build is reported at the end, and the others are still written.
 
 To compile a grammar HUME does not ship, from your own checkout of it:
 
@@ -87,7 +88,9 @@ hume-grammar-build compile path/to/tree-sitter-mylang mylang.so
   reason and, optionally, the platforms it applies to.
 - To release: set the new version in `Cargo.toml`, commit, tag the commit
   `v<version>` and push the tag. The release workflow builds every
-  platform, verifies each bundle and publishes the release. Running the
+  platform, packs each platform's archives into its bundle with
+  `hume-grammar-build bundle <grammars-dir> <out-dir>`, verifies each bundle
+  and publishes the release. Running the
   workflow by hand on a branch builds and verifies without publishing.
 
 ## License

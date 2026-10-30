@@ -1,4 +1,4 @@
-//! `build`: from pins to a platform bundle.
+//! `build`: from pins to one archive per language.
 //!
 //! Helix's queries are checked out once. Each distinct grammar repository
 //! is a unit of work, run in parallel with the others: one fetch, one
@@ -16,7 +16,7 @@ use std::sync::Mutex;
 use std::sync::mpsc;
 use std::thread;
 
-use crate::bundle::{self, Bundle, BundleError};
+use crate::bundle;
 use crate::compile;
 use crate::git::{Git, GitError};
 use crate::licenses;
@@ -24,7 +24,6 @@ use crate::manifest::Manifest;
 use crate::pins::Pin;
 use crate::probe;
 use crate::queries::{self, QueryError};
-use crate::sums;
 
 pub(crate) const HELIX_URL: &str = "https://github.com/helix-editor/helix";
 
@@ -33,7 +32,7 @@ pub(crate) struct Request<'a> {
     pub(crate) languages: Vec<&'a Pin>,
     pub(crate) helix_url: &'a str,
     pub(crate) helix_rev: &'a str,
-    /// Holds the bundle, which new archives join.
+    /// Receives each language's archive, beside any it already holds.
     pub(crate) out: &'a Path,
     pub(crate) tag: &'a str,
     pub(crate) platform: &'a str,
@@ -50,7 +49,6 @@ pub(crate) struct Report {
 /// Why nothing was built.
 #[derive(Debug)]
 pub(crate) enum BuildError {
-    Bundle(BundleError),
     Helix(GitError),
     NoHighlights(Vec<String>),
     Io { path: PathBuf, source: io::Error },
@@ -59,7 +57,6 @@ pub(crate) enum BuildError {
 impl fmt::Display for BuildError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Bundle(e) => e.fmt(f),
             Self::Helix(e) => write!(f, "Helix queries: {e}"),
             Self::NoHighlights(languages) => {
                 write!(
@@ -70,12 +67,6 @@ impl fmt::Display for BuildError {
             }
             Self::Io { path, source } => write!(f, "{}: {source}", path.display()),
         }
-    }
-}
-
-impl From<BundleError> for BuildError {
-    fn from(e: BundleError) -> Self {
-        Self::Bundle(e)
     }
 }
 
@@ -106,12 +97,11 @@ struct Context<'a> {
     request: &'a Request<'a>,
 }
 
-/// Build `request.languages` into the bundle in `request.out`, then write
-/// `SHA256SUMS` there. A language that fails does not stop the others; the
-/// report lists it.
+/// Build `request.languages` into `request.out`, writing each language's
+/// archive as it is built. A language that fails, or whose archive cannot be
+/// written, does not stop the others; the report lists it.
 pub(crate) fn build(request: &Request, git: &Git) -> Result<Report, BuildError> {
     fs::create_dir_all(request.out).map_err(io_error(request.out))?;
-    let mut bundle = Bundle::open(request.out, request.tag, request.platform)?;
     let work = tempfile::Builder::new()
         .prefix("hume-grammar-build")
         .tempdir()
@@ -149,10 +139,13 @@ pub(crate) fn build(request: &Request, git: &Git) -> Result<Report, BuildError> 
         for warning in &outcome.warnings {
             eprintln!("warning: {}: {warning}", outcome.language);
         }
-        match outcome.archive {
-            Ok(archive) => {
+        let written = outcome.archive.and_then(|archive| {
+            bundle::write_archive(request.out, &outcome.language, &archive)
+                .map_err(|e| format!("{}: {e}", request.out.display()))
+        });
+        match written {
+            Ok(()) => {
                 eprintln!("built {}", outcome.language);
-                bundle.insert(&outcome.language, archive);
                 report.built.push(outcome.language);
             }
             Err(reason) => {
@@ -163,8 +156,6 @@ pub(crate) fn build(request: &Request, git: &Git) -> Result<Report, BuildError> 
     });
     report.built.sort();
     report.failed.sort();
-    bundle.write(request.out)?;
-    sums::write(request.out).map_err(io_error(request.out))?;
     Ok(report)
 }
 

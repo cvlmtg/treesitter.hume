@@ -32,6 +32,7 @@ use pipeline::Request;
 
 const USAGE: &str = "\
 usage: hume-grammar-build build [--out <dir>] (--all | <language>...)
+       hume-grammar-build bundle <grammars-dir> <out-dir>
        hume-grammar-build sums <dir>
        hume-grammar-build compile <grammar-dir> <library>
        hume-grammar-build --version";
@@ -41,10 +42,16 @@ const TAG: &str = concat!("v", env!("CARGO_PKG_VERSION"));
 
 #[derive(Debug, PartialEq, Eq)]
 enum Command {
-    /// Build pinned languages into the bundle in `out`.
+    /// Build pinned languages into `out`, one archive each.
     Build {
         out: PathBuf,
         selection: Selection,
+    },
+    /// Pack the language archives in `grammars` into a release bundle in
+    /// `out`, with its `SHA256SUMS`.
+    Bundle {
+        grammars: PathBuf,
+        out: PathBuf,
     },
     /// Write `SHA256SUMS` for the files in a directory.
     Sums(PathBuf),
@@ -90,6 +97,10 @@ fn parse(args: &[OsString]) -> Result<Command, String> {
     match strings.as_slice() {
         ["--version"] => Ok(Command::Version),
         ["sums", dir] => Ok(Command::Sums(PathBuf::from(dir))),
+        ["bundle", grammars, out] => Ok(Command::Bundle {
+            grammars: PathBuf::from(grammars),
+            out: PathBuf::from(out),
+        }),
         ["compile", grammar, library] => Ok(Command::Compile {
             grammar: PathBuf::from(grammar),
             library: PathBuf::from(library),
@@ -130,6 +141,19 @@ fn run(command: Command) -> Result<ExitCode, String> {
         Command::Sums(dir) => sums::write(&dir)
             .map(|()| ExitCode::SUCCESS)
             .map_err(|e| format!("{}: {e}", dir.display())),
+        Command::Bundle { grammars, out } => {
+            let platform = platform::current();
+            let bundle =
+                bundle::Bundle::read(&grammars, TAG, &platform).map_err(|e| e.to_string())?;
+            bundle.write(&out).map_err(|e| e.to_string())?;
+            sums::write(&out).map_err(|e| format!("{}: {e}", out.display()))?;
+            eprintln!(
+                "bundled {} for {platform} into {}",
+                bundle.len(),
+                out.display()
+            );
+            Ok(ExitCode::SUCCESS)
+        }
         Command::Compile { grammar, library } => compile::build(&grammar, &library)
             .map(|()| ExitCode::SUCCESS)
             .map_err(|e| e.to_string()),

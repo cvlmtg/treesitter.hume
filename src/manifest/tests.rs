@@ -42,3 +42,26 @@ fn quotes_and_backslashes_are_escaped() {
             .contains(r#"(url . "https://example.com/a\"b\\c")"#)
     );
 }
+
+#[test]
+fn a_string_field_reads_back_what_to_scheme_wrote() {
+    let manifest = Manifest {
+        url: r#"https://example.com/a"b\c"#,
+        ..manifest()
+    };
+    let text = manifest.to_scheme();
+    assert_eq!(
+        read_string(&text, "name").as_deref(),
+        Some("markdown.inline")
+    );
+    assert_eq!(
+        read_string(&text, "url").as_deref(),
+        Some(r#"https://example.com/a"b\c"#)
+    );
+    assert_eq!(
+        read_string(&text, "rev").as_deref(),
+        Some("f969cd3ae3f9fbd4e43205431d0ae286014c05b5")
+    );
+    assert_eq!(read_string(&text, "abi"), None);
+    assert_eq!(read_string(&text, "missing"), None);
+}

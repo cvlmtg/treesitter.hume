@@ -2,6 +2,7 @@ use std::fs;
 use std::io::Read;
 
 use super::*;
+use crate::manifest::Manifest;
 use crate::sums::sha256_hex;
 
 /// `archive`'s entries, as `(path, contents)` in archive order.
@@ -113,63 +114,86 @@ fn the_tar_names_each_member_after_its_language() {
     assert_eq!(names, ["markdown.inline.tar.gz", "rust.tar.gz"]);
 }
 
+/// A language archive whose manifest names `name`, `platform` and `tag`.
+fn built(name: &str, platform: &str, tag: &str) -> Vec<u8> {
+    let manifest = Manifest {
+        name,
+        url: "https://example.com/tree-sitter-x",
+        rev: "abc",
+        subpath: "",
+        symbol: "tree_sitter_x",
+        abi: 15,
+        platform,
+        tag,
+        helix_rev: "def",
+    };
+    archive(&[(
+        "manifest.scm".to_string(),
+        manifest.to_scheme().into_bytes(),
+    )])
+    .expect("archive")
+}
+
 #[test]
-fn opening_an_existing_bundle_keeps_its_members() {
-    let dir = tempfile::tempdir().expect("dir");
-    bundle(&[("c", b"old c"), ("rust", b"rust")])
-        .write(dir.path())
+fn reading_a_folder_takes_each_archive_under_its_language() {
+    let grammars = tempfile::tempdir().expect("grammars");
+    let c = built("c", "linux-x86_64", "v1.0.0");
+    let inline = built("markdown.inline", "linux-x86_64", "v1.0.0");
+    write_archive(grammars.path(), "c", &c).expect("c");
+    write_archive(grammars.path(), "markdown.inline", &inline).expect("inline");
+    fs::write(grammars.path().join("notes.txt"), "not an archive").expect("notes");
+    let out = tempfile::tempdir().expect("out");
+
+    Bundle::read(grammars.path(), "v1.0.0", "linux-x86_64")
+        .expect("read")
+        .write(out.path())
         .expect("write");
-    let mut reopened = Bundle::open(dir.path(), "v1.0.0", "linux-x86_64").expect("open");
-    reopened.insert("c", b"new c".to_vec());
-    reopened.insert("json", b"json".to_vec());
-    reopened.write(dir.path()).expect("write");
+
     assert_eq!(
-        members_by_index(dir.path()),
+        members_by_index(out.path()),
         [
-            ("c".to_string(), b"new c".to_vec()),
-            ("json".to_string(), b"json".to_vec()),
-            ("rust".to_string(), b"rust".to_vec()),
+            ("c".to_string(), c),
+            ("markdown.inline".to_string(), inline),
         ]
     );
 }
 
-#[test]
-fn opening_an_empty_directory_starts_an_empty_bundle() {
-    let dir = tempfile::tempdir().expect("dir");
-    let bundle = Bundle::open(dir.path(), "v1.0.0", "linux-x86_64").expect("open");
-    assert!(bundle.members.is_empty());
+/// The error reading a folder that holds only `archive`, as `language`.
+fn read_error(language: &str, archive: &[u8]) -> String {
+    let grammars = tempfile::tempdir().expect("grammars");
+    write_archive(grammars.path(), language, archive).expect("archive");
+    Bundle::read(grammars.path(), "v1.0.0", "linux-x86_64")
+        .expect_err("refused")
+        .to_string()
 }
 
 #[test]
-fn a_bundle_from_another_tag_is_refused() {
-    let dir = tempfile::tempdir().expect("dir");
-    bundle(&[("c", b"c")]).write(dir.path()).expect("write");
-    let err = Bundle::open(dir.path(), "v2.0.0", "linux-x86_64").expect_err("older tag");
-    assert!(err.to_string().contains("v1.0.0"), "{err}");
+fn an_archive_from_another_tag_is_refused() {
+    let err = read_error("c", &built("c", "linux-x86_64", "v0.9.0"));
+    assert!(err.contains("v0.9.0"), "{err}");
 }
 
 #[test]
-fn a_tar_without_its_index_is_refused() {
-    let dir = tempfile::tempdir().expect("dir");
-    bundle(&[("c", b"c")]).write(dir.path()).expect("write");
-    fs::remove_file(dir.path().join("grammars-linux-x86_64.index")).expect("remove");
-    Bundle::open(dir.path(), "v1.0.0", "linux-x86_64").expect_err("no index");
+fn an_archive_for_another_platform_is_refused() {
+    let err = read_error("c", &built("c", "macos-aarch64", "v1.0.0"));
+    assert!(err.contains("macos-aarch64"), "{err}");
 }
 
 #[test]
-fn a_member_that_does_not_match_its_digest_is_refused() {
-    let dir = tempfile::tempdir().expect("dir");
-    bundle(&[("c", b"c archive")])
-        .write(dir.path())
-        .expect("write");
-    let path = dir.path().join("grammars-linux-x86_64.tar");
-    let mut tar = fs::read(&path).expect("tar");
-    let at = tar
-        .windows(9)
-        .position(|w| w == b"c archive")
-        .expect("member bytes");
-    tar[at] = b'C';
-    fs::write(&path, tar).expect("tar");
-    let err = Bundle::open(dir.path(), "v1.0.0", "linux-x86_64").expect_err("corrupt");
-    assert!(err.to_string().contains("c"), "{err}");
+fn an_archive_of_another_language_is_refused() {
+    let err = read_error("rust", &built("c", "linux-x86_64", "v1.0.0"));
+    assert!(err.contains("rust.tar.gz"), "{err}");
+}
+
+#[test]
+fn an_archive_without_a_manifest_is_refused() {
+    let archive = archive(&[("c.so".to_string(), b"lib".to_vec())]).expect("archive");
+    let err = read_error("c", &archive);
+    assert!(err.contains("manifest.scm"), "{err}");
+}
+
+#[test]
+fn a_folder_without_archives_is_refused() {
+    let grammars = tempfile::tempdir().expect("grammars");
+    Bundle::read(grammars.path(), "v1.0.0", "linux-x86_64").expect_err("no archives");
 }

@@ -40,5 +40,21 @@ fn scheme_string(value: &str) -> String {
     format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""))
 }
 
+/// The string `key` holds in a manifest `to_scheme` wrote, or `None` when it
+/// holds none.
+pub(crate) fn read_string(manifest: &str, key: &str) -> Option<String> {
+    let prefix = format!("({key} . \"");
+    let start = manifest.find(&prefix)? + prefix.len();
+    let mut value = String::new();
+    let mut chars = manifest[start..].chars();
+    loop {
+        match chars.next()? {
+            '"' => return Some(value),
+            '\\' => value.push(chars.next()?),
+            c => value.push(c),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests;

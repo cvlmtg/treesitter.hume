@@ -1,6 +1,8 @@
-//! A platform's release: `grammars-<platform>.tar`, an uncompressed tar of
-//! one `<language>.tar.gz` per language, and `grammars-<platform>.index`,
-//! which says where each one starts.
+//! A build writes one `<language>.tar.gz` per language into a folder, which
+//! HUME installs from as it is. A release packs that folder into a
+//! platform's bundle: `grammars-<platform>.tar`, an uncompressed tar of the
+//! language archives, and `grammars-<platform>.index`, which says where each
+//! one starts.
 //!
 //! The index is text. Its first line is `treesitter.hume <tag> <platform>`;
 //! each other line is `<language> <offset> <size> <sha256>`, so a client
@@ -10,13 +12,17 @@
 use std::collections::BTreeMap;
 use std::fmt;
 use std::fs;
-use std::io::{self, Write};
+use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
 use flate2::Compression;
+use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 
+use crate::manifest;
 use crate::sums::sha256_hex;
+
+const ARCHIVE_SUFFIX: &str = ".tar.gz";
 
 /// A ustar header occupies one 512-byte block, and member data is padded to
 /// a whole number of blocks.
@@ -32,6 +38,17 @@ pub(crate) fn archive(files: &[(String, Vec<u8>)]) -> io::Result<Vec<u8>> {
         tar.append_data(&mut header(contents.len()), path, contents.as_slice())?;
     }
     tar.into_inner()?.finish()
+}
+
+/// Where `language`'s archive sits in a build's folder.
+fn archive_path(dir: &Path, language: &str) -> PathBuf {
+    dir.join(format!("{language}{ARCHIVE_SUFFIX}"))
+}
+
+/// Write `language`'s archive into the folder `dir`, replacing an earlier
+/// one.
+pub(crate) fn write_archive(dir: &Path, language: &str, archive: &[u8]) -> io::Result<()> {
+    replace(&archive_path(dir, language), archive)
 }
 
 fn header(size: usize) -> tar::Header {
@@ -50,8 +67,10 @@ pub(crate) enum BundleError {
         path: PathBuf,
         source: io::Error,
     },
-    /// The output directory holds a bundle the tool cannot extend.
+    /// An archive was built for another language, platform or release.
     Foreign(String),
+    /// The folder holds no language archive.
+    Empty(PathBuf),
     Corrupt {
         path: PathBuf,
         problem: String,
@@ -63,6 +82,11 @@ impl fmt::Display for BundleError {
         match self {
             Self::Io { path, source } => write!(f, "{}: {source}", path.display()),
             Self::Foreign(problem) => f.write_str(problem),
+            Self::Empty(dir) => write!(
+                f,
+                "{}: no <language>{ARCHIVE_SUFFIX} to bundle",
+                dir.display()
+            ),
             Self::Corrupt { path, problem } => write!(f, "{}: {problem}", path.display()),
         }
     }
@@ -82,7 +106,7 @@ pub(crate) struct Bundle {
 }
 
 impl Bundle {
-    pub(crate) fn new(tag: &str, platform: &str) -> Self {
+    fn new(tag: &str, platform: &str) -> Self {
         Self {
             tag: tag.to_string(),
             platform: platform.to_string(),
@@ -90,66 +114,56 @@ impl Bundle {
         }
     }
 
-    /// The bundle for `tag` and `platform` in `dir`, or an empty one when
-    /// `dir` holds none. A bundle from another tag or platform is refused,
-    /// so one bundle never mixes archives from two releases.
-    pub(crate) fn open(dir: &Path, tag: &str, platform: &str) -> Result<Self, BundleError> {
+    /// The bundle of every language archive in the folder `grammars`. An
+    /// archive whose manifest names another language than its file name, or
+    /// another tag or platform, is refused, so one bundle never mixes
+    /// archives from two releases.
+    pub(crate) fn read(grammars: &Path, tag: &str, platform: &str) -> Result<Self, BundleError> {
         let mut bundle = Self::new(tag, platform);
-        let (tar_path, index_path) = (bundle.tar_path(dir), bundle.index_path(dir));
-        match (tar_path.exists(), index_path.exists()) {
-            (false, false) => return Ok(bundle),
-            (true, true) => {}
-            _ => {
-                return Err(BundleError::Foreign(format!(
-                    "{} needs both {} and {}; remove the one left",
-                    dir.display(),
-                    tar_path.display(),
-                    index_path.display()
-                )));
-            }
-        }
-        let index = fs::read_to_string(&index_path).map_err(io_error(&index_path))?;
-        let tar = fs::read(&tar_path).map_err(io_error(&tar_path))?;
-        let corrupt = |problem: String| BundleError::Corrupt {
-            path: index_path.clone(),
-            problem,
-        };
-        let mut lines = index.lines();
-        let expected = bundle.index_header();
-        match lines.next() {
-            Some(header) if header == expected => {}
-            Some(header) => {
-                return Err(BundleError::Foreign(format!(
-                    "{} is \"{header}\", not \"{expected}\"; build into an empty directory",
-                    index_path.display()
-                )));
-            }
-            None => return Err(corrupt("empty index".to_string())),
-        }
-        for line in lines {
-            let [language, offset, size, digest] = line.split(' ').collect::<Vec<_>>()[..] else {
-                return Err(corrupt(format!("malformed line {line:?}")));
+        for entry in fs::read_dir(grammars).map_err(io_error(grammars))? {
+            let path = entry.map_err(io_error(grammars))?.path();
+            let Some(language) = path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .and_then(|name| name.strip_suffix(ARCHIVE_SUFFIX))
+            else {
+                continue;
             };
-            let range = offset
-                .parse::<usize>()
-                .ok()
-                .zip(size.parse::<usize>().ok())
-                .and_then(|(offset, size)| Some(offset..offset.checked_add(size)?))
-                .filter(|range| range.end <= tar.len())
-                .ok_or_else(|| corrupt(format!("{language}: no such range of the tar")))?;
-            let bytes = &tar[range];
-            if sha256_hex(bytes) != digest {
-                return Err(corrupt(format!(
-                    "{language}: the tar does not match its digest"
-                )));
-            }
-            bundle.members.insert(language.to_string(), bytes.to_vec());
+            let archive = fs::read(&path).map_err(io_error(&path))?;
+            bundle.check(&path, language, &archive)?;
+            bundle.insert(language, archive);
+        }
+        if bundle.members.is_empty() {
+            return Err(BundleError::Empty(grammars.to_path_buf()));
         }
         Ok(bundle)
     }
 
+    /// Refuses `archive`, read from `path`, unless its manifest names
+    /// `language` and this bundle's tag and platform.
+    fn check(&self, path: &Path, language: &str, archive: &[u8]) -> Result<(), BundleError> {
+        let text = manifest_text(archive).map_err(|problem| BundleError::Corrupt {
+            path: path.to_path_buf(),
+            problem,
+        })?;
+        for (key, expected) in [
+            ("name", language),
+            ("platform", self.platform.as_str()),
+            ("tag", self.tag.as_str()),
+        ] {
+            let found = manifest::read_string(&text, key);
+            if found.as_deref() != Some(expected) {
+                return Err(BundleError::Foreign(format!(
+                    "{}: its manifest's {key} is {found:?}, not \"{expected}\"",
+                    path.display()
+                )));
+            }
+        }
+        Ok(())
+    }
+
     /// Add or replace `language`'s archive.
-    pub(crate) fn insert(&mut self, language: &str, archive: Vec<u8>) {
+    fn insert(&mut self, language: &str, archive: Vec<u8>) {
         self.members.insert(language.to_string(), archive);
     }
 
@@ -157,13 +171,15 @@ impl Bundle {
     /// one whole; the index goes last, so it never names a member the tar
     /// does not hold.
     pub(crate) fn write(&self, dir: &Path) -> Result<(), BundleError> {
+        fs::create_dir_all(dir).map_err(io_error(dir))?;
+        let tar_path = self.tar_path(dir);
         let mut tar = tar::Builder::new(Vec::new());
         let mut index = self.index_header();
         for (language, archive) in &self.members {
             let name = format!("{language}.tar.gz");
             let offset = tar.get_ref().len() + BLOCK;
             tar.append_data(&mut header(archive.len()), &name, archive.as_slice())
-                .map_err(io_error(&self.tar_path(dir)))?;
+                .map_err(io_error(&tar_path))?;
             let padded = archive.len().div_ceil(BLOCK) * BLOCK;
             assert_eq!(
                 tar.get_ref().len(),
@@ -177,9 +193,15 @@ impl Bundle {
             ));
         }
         index.push('\n');
-        let tar = tar.into_inner().map_err(io_error(&self.tar_path(dir)))?;
-        replace(&self.tar_path(dir), &tar)?;
-        replace(&self.index_path(dir), index.as_bytes())
+        let tar = tar.into_inner().map_err(io_error(&tar_path))?;
+        replace(&tar_path, &tar).map_err(io_error(&tar_path))?;
+        let index_path = self.index_path(dir);
+        replace(&index_path, index.as_bytes()).map_err(io_error(&index_path))
+    }
+
+    /// How many language archives the bundle holds.
+    pub(crate) fn len(&self) -> usize {
+        self.members.len()
     }
 
     fn index_header(&self) -> String {
@@ -195,18 +217,34 @@ impl Bundle {
     }
 }
 
+/// The text of `archive`'s `manifest.scm`.
+fn manifest_text(archive: &[u8]) -> Result<String, String> {
+    let mut tar = tar::Archive::new(GzDecoder::new(archive));
+    for entry in tar.entries().map_err(|e| e.to_string())? {
+        let mut entry = entry.map_err(|e| e.to_string())?;
+        if entry.path().map_err(|e| e.to_string())?.as_os_str() == "manifest.scm" {
+            let mut text = String::new();
+            entry
+                .read_to_string(&mut text)
+                .map_err(|e| format!("manifest.scm: {e}"))?;
+            return Ok(text);
+        }
+    }
+    Err("no manifest.scm".to_string())
+}
+
 /// Write `path` through a dotfile beside it, so it is never seen half
 /// written.
-fn replace(path: &Path, contents: &[u8]) -> Result<(), BundleError> {
+fn replace(path: &Path, contents: &[u8]) -> io::Result<()> {
     let name = path
         .file_name()
         .and_then(|name| name.to_str())
         .expect("bundle paths end in a UTF-8 file name");
     let tmp = path.with_file_name(format!(".{name}.tmp"));
-    let mut file = fs::File::create(&tmp).map_err(io_error(&tmp))?;
-    file.write_all(contents).map_err(io_error(&tmp))?;
-    file.sync_all().map_err(io_error(&tmp))?;
-    fs::rename(&tmp, path).map_err(io_error(path))
+    let mut file = fs::File::create(&tmp)?;
+    file.write_all(contents)?;
+    file.sync_all()?;
+    fs::rename(&tmp, path)
 }
 
 #[cfg(test)]

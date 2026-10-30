@@ -59,6 +59,18 @@ fn sums_and_compile_take_their_paths() {
 }
 
 #[test]
+fn bundle_takes_the_grammars_and_output_directories() {
+    assert_eq!(
+        parsed(&["bundle", "grammars", "dist"]),
+        Ok(Command::Bundle {
+            grammars: PathBuf::from("grammars"),
+            out: PathBuf::from("dist"),
+        })
+    );
+    assert!(parsed(&["bundle", "grammars"]).is_err());
+}
+
+#[test]
 fn version_and_unknown_commands() {
     assert_eq!(parsed(&["--version"]), Ok(Command::Version));
     assert!(parsed(&[]).is_err());
