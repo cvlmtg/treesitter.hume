@@ -8,6 +8,10 @@ macOS (Apple silicon) and Windows (x86_64), with the syntax queries HUME uses
 alongside. On any other platform, the same tool builds the same grammars on
 your machine.
 
+Which grammars a release holds, the commit each one is built from, and the
+queries all come from [Helix](https://helix-editor.com), at one pinned Helix
+commit.
+
 ## What a release holds
 
 | File | What it is |
@@ -93,6 +97,17 @@ hume-grammar-build compile path/to/tree-sitter-mylang mylang.so
   and publishes the release. Running the
   workflow by hand on a branch builds and verifies without publishing.
 
+## Credits
+
+- [Helix](https://helix-editor.com): the list of grammars, the commit each
+  one is built from, and the query files.
+- The authors of each grammar: an archive's `licenses/` holds its grammar's
+  license, and `licenses/SOURCE` links the grammar's repository.
+
 ## License
 
-MIT. See `LICENSE`.
+The tool and the rest of this repository are MIT. See `LICENSE`.
+
+The grammar archives are not covered by it: each grammar keeps its own
+license, and the query files are under the MPL-2.0, as each archive's
+`licenses/` and `queries/NOTICE` state.
