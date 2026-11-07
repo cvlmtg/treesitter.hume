@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://gitlab.com/TheZoq2/tree-sitter-lpf"
+rev = "db7372e60c722ca7f12ab359e57e6bf7611ab126"
+subpath = ""
+symbol = "tree_sitter_lpf"

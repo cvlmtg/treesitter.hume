@@ -1,0 +1,6 @@
+[[language]]
+name = "xtc"
+scope = "source.xtc"
+# Accept Xena Traffic Configuration, Xena Port Configuration and Xena OpenAutomation
+file-types = [ "xtc", "xpc", "xoa" ]
+comment-token = ";"

@@ -1,0 +1,9 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+context = "8decd73460d26ef0a0befb745d022dd1fc2c38b8"
+
+[grammar]
+url = "https://github.com/victorhqc/tree-sitter-prisma"
+rev = "eca2596a355b1a9952b4f80f8f9caed300a272b5"
+subpath = ""
+symbol = "tree_sitter_prisma"

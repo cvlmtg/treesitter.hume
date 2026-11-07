@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/Julian/tree-sitter-lean"
+rev = "d98426109258b266e1e92358c5f11716d2e8f638"
+subpath = ""
+symbol = "tree_sitter_lean"

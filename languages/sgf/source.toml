@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/lykahb/tree-sitter-sgf"
+rev = "b7e0fb713b29495722e056fdc3dc4f889f6d6ed2"
+subpath = ""
+symbol = "tree_sitter_sgf"

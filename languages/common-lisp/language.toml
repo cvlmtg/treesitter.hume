@@ -1,0 +1,15 @@
+[[language]]
+name = "common-lisp"
+scope = "source.commonlisp"
+file-types = ["lisp", "asd", "cl", "l", "lsp", "ny", "podsl", "ros", "sexp"]
+shebangs = ["lisp", "sbcl", "ccl", "clisp", "ecl"]
+comment-token = ";"
+indent = { tab-width = 2, unit = "  " }
+language-servers = [ "cl-lsp" ]
+grammar = "commonlisp"
+
+[language.auto-pairs]
+'(' = ')'
+'{' = '}'
+'[' = ']'
+'"' = '"'

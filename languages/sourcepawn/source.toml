@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/nilshelmig/tree-sitter-sourcepawn"
+rev = "5a8fdd446b516c81e218245c12129c6ad4bccfa2"
+subpath = ""
+symbol = "tree_sitter_sourcepawn"

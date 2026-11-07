@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/santhoshtr/tree-sitter-wikitext"
+rev = "444214b31695e9dd4d32fb06247397fb8778a9d2"
+subpath = ""
+symbol = "tree_sitter_wikitext"

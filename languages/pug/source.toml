@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/zealot128/tree-sitter-pug"
+rev = "13e9195370172c86a8b88184cc358b23b677cc46"
+subpath = ""
+symbol = "tree_sitter_pug"

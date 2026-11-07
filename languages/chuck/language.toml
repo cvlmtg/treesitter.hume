@@ -1,0 +1,8 @@
+[[language]]
+name = "chuck"
+scope = "source.ck"
+comment-tokens = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+file-types = [{ glob = "*.ck" }]
+indent = { tab-width = 4, unit="    "}
+injection-regex = "^chuck$|^ck$"

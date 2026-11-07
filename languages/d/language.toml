@@ -1,0 +1,10 @@
+[[language]]
+name = "d"
+scope = "source.d"
+file-types = [ "d", "dd" ]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+injection-regex = "d"
+indent = { tab-width = 4, unit = "    "}
+language-servers = [ "serve-d" ]
+formatter = { command = "dfmt" }

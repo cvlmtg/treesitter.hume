@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/erasin/tree-sitter-po"
+rev = "417cee9abb2053ed26b19e7de972398f2da9b29e"
+subpath = ""
+symbol = "tree_sitter_po"

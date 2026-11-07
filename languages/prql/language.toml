@@ -1,0 +1,7 @@
+[[language]]
+name = "prql"
+scope = "source.prql"
+injection-regex = "prql"
+file-types = ["prql"]
+comment-token = "#"
+indent = { tab-width = 4, unit = "    " }

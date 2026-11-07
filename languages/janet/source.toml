@@ -1,0 +1,9 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+context = "8decd73460d26ef0a0befb745d022dd1fc2c38b8"
+
+[grammar]
+url = "https://github.com/sogaiu/tree-sitter-janet-simple"
+rev = "3c1bdcfff374138da03a1db25c75efce623910fe"
+subpath = ""
+symbol = "tree_sitter_janet_simple"

@@ -1,0 +1,5 @@
+[[language]]
+name = "po"
+scope = "source.po"
+file-types = ["po", "pot"]
+comment-token = "#"

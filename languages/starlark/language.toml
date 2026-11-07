@@ -1,0 +1,20 @@
+[[language]]
+name = "starlark"
+scope = "source.starlark"
+injection-regex = "(starlark|bzl|bazel|buck)"
+file-types = [
+  "bzl",
+  "bazel",
+  "star",
+  "bxl", # Buck Extension Language
+  { glob = "BUILD" },
+  { glob = "BUCK" },
+  { glob = "BUILD.*" },
+  { glob = "WORKSPACE" },
+  { glob = "WORKSPACE.bzlmod" },
+  { glob = "PACKAGE" },
+]
+comment-token = "#"
+indent = { tab-width = 4, unit = "    " }
+language-servers = [ "starpls", "buck2" ]
+grammar = "python"

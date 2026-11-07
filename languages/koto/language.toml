@@ -1,0 +1,10 @@
+[[language]]
+name = "koto"
+scope = "source.koto"
+injection-regex = "koto"
+file-types = ["koto"]
+comment-token = "#"
+block-comment-tokens = ["#-", "-#"]
+indent = { tab-width = 2, unit = "  " }
+language-servers = ["koto-ls"]
+formatter = {command = "koto", args = ["--format"]}

@@ -1,0 +1,11 @@
+[[language]]
+name = "haskell-literate"
+scope = "source.haskell-literate"
+injection-regex = "lhs"
+file-types = ["lhs"]
+roots = ["Setup.hs", "stack.yaml", "cabal.project", "hie.yaml"]
+shebangs = ["runhaskell", "stack"]
+comment-token = "--"
+block-comment-tokens = { start = "{-", end = "-}" }
+language-servers = [ "haskell-language-server" ]
+indent = { tab-width = 2, unit = "  " }

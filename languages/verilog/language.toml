@@ -1,0 +1,9 @@
+[[language]]
+name = "verilog"
+scope = "source.verilog"
+file-types = ["v", "vh"]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+language-servers = ["verible-verilog-ls"]
+indent = { tab-width = 2, unit = "  " }
+injection-regex = "verilog"

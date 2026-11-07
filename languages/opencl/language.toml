@@ -1,0 +1,7 @@
+[[language]]
+name = "opencl"
+scope = "source.cl"
+injection-regex = "(cl|opencl)"
+file-types = ["cl"]
+comment-token = "//"
+language-servers = [ "clangd" ]

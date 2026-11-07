@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/caddyserver/tree-sitter-caddyfile"
+rev = "15437433b7deec0f0431fb4a5bedb64ecae01513"
+subpath = ""
+symbol = "tree_sitter_caddyfile"

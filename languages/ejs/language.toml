@@ -1,0 +1,8 @@
+[[language]]
+name = "ejs"
+scope = "text.html.ejs"
+injection-regex = "ejs"
+file-types = ["ejs"]
+block-comment-tokens = { start = "<!--", end = "-->" }
+indent = { tab-width = 2, unit = "  " }
+grammar = "embedded-template"

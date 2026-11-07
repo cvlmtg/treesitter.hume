@@ -1,0 +1,7 @@
+[[language]]
+name = "hoon"
+scope = "source.hoon"
+injection-regex = "hoon"
+file-types = ["hoon"]
+comment-token = "::"
+indent = {tab-width = 2, unit = "  "}

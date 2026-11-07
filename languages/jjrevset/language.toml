@@ -1,0 +1,4 @@
+[[language]]
+name = "jjrevset"
+scope = "jj.revset"
+file-types = ["jjrevset"]

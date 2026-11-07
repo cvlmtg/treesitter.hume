@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/bearcove/styx"
+rev = "51feb2a67f211e806e5e2764bc5c06738a6c40d7"
+subpath = "crates/tree-sitter-styx"
+symbol = "tree_sitter_styx"

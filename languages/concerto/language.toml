@@ -1,0 +1,8 @@
+[[language]]
+name = "concerto"
+scope = "source.concerto"
+injection-regex = "concerto"
+file-types = ["cto"]
+comment-tokens = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 2, unit = "  " }

@@ -1,0 +1,7 @@
+[[language]]
+name = "mermaid"
+scope = "source.mermaid"
+injection-regex = "mermaid"
+file-types = ["mermaid", "mmd"]
+comment-token = "%%"
+indent = { tab-width = 4, unit = "    " }

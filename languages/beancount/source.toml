@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/polarmutex/tree-sitter-beancount"
+rev = "429cff869513cf9e34a2cf604fbfaaedc467e809"
+subpath = ""
+symbol = "tree_sitter_beancount"

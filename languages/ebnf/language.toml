@@ -1,0 +1,8 @@
+[[language]]
+name = "ebnf"
+scope = "source.ebnf"
+file-types = ["ebnf"]
+injection-regex = "ebnf"
+language-servers = ["ebnfer"]
+indent = { tab-width = 4, unit = "    " }
+block-comment-tokens = { end = "*)", start = "(*" }

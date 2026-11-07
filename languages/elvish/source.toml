@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/ckafi/tree-sitter-elvish"
+rev = "e50787cadd3bc54f6d9c0704493a79078bb8a4e5"
+subpath = ""
+symbol = "tree_sitter_elvish"

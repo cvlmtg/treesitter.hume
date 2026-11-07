@@ -1,0 +1,8 @@
+[[language]]
+name = "jq"
+scope = "source.jq"
+injection-regex = "jq"
+file-types = ["jq"]
+comment-token = "#"
+language-servers = ["jq-lsp"]
+indent = { tab-width = 2, unit = "  " }

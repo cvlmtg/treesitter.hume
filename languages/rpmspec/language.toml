@@ -1,0 +1,5 @@
+[[language]]
+name = "rpmspec"
+scope = "source.rpmspec"
+file-types = ["spec"]
+comment-token = "#"

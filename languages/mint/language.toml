@@ -1,0 +1,10 @@
+[[language]]
+name = "mint"
+scope = "source.mint"
+injection-regex = "mint"
+file-types = ["mint"]
+shebangs = []
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+language-servers = [ "mint" ]
+indent = { tab-width = 2, unit = "  " }

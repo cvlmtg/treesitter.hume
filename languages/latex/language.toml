@@ -1,0 +1,9 @@
+[[language]]
+name = "latex"
+scope = "source.tex"
+injection-regex = "tex"
+file-types = ["tex", "dtx", "ins", "sty", "cls", "Rd", "bbx", "cbx"]
+comment-token = "%"
+language-servers = [ "texlab" ]
+indent = { tab-width = 4, unit = "\t" }
+formatter = { command = "tex-fmt", args = ["--stdin"] }

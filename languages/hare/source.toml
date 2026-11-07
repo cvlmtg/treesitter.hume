@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://git.sr.ht/~ecs/tree-sitter-hare"
+rev = "07035a248943575444aa0b893ffe306e1444c0ab"
+subpath = ""
+symbol = "tree_sitter_hare"

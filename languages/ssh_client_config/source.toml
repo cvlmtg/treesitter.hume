@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/metio/tree-sitter-ssh-client-config"
+rev = "4abd07dc3884124d60e37e1f2dd98a1676859ae0"
+subpath = ""
+symbol = "tree_sitter_ssh_client_config"

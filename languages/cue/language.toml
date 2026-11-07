@@ -1,0 +1,11 @@
+[[language]]
+name = "cue"
+scope = "source.cue"
+injection-regex = "cue"
+file-types = ["cue"]
+roots = ["cue.mod"]
+auto-format = true
+comment-token = "//"
+language-servers = [ "cuelsp" ]
+indent = { tab-width = 4, unit = "\t" }
+formatter = { command = "cue", args = ["fmt", "-"] }

@@ -1,0 +1,10 @@
+[[language]]
+name = "dhall"
+scope = "source.dhall"
+injection-regex = "dhall"
+file-types = ["dhall"]
+comment-token = "--"
+block-comment-tokens = { start = "{-", end = "-}" }
+indent = { tab-width = 2, unit = "  " }
+language-servers = [ "dhall-lsp-server" ]
+formatter = { command = "dhall" , args = ["format"] }

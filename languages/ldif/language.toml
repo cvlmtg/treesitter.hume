@@ -1,0 +1,6 @@
+[[language]]
+name = "ldif"
+scope = "source.ldif"
+injection-regex = "ldif"
+file-types = ["ldif"]
+comment-token = "#"

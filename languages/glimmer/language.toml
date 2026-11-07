@@ -1,0 +1,17 @@
+[[language]]
+name = "glimmer"
+scope = "source.glimmer"
+injection-regex = "hbs"
+file-types = [{ glob = "{app,addon}/{components,templates}/*.hbs" }]
+block-comment-tokens = { start = "{{!", end = "}}" }
+roots = ["package.json", "ember-cli-build.js"]
+grammar = "glimmer"
+language-servers = ["ember-language-server"]
+formatter = { command = "prettier", args = ['--parser', 'glimmer'] }
+
+[language.auto-pairs]
+'"' = '"'
+'{' = '}'
+'(' = ')'
+'<' = '>'
+"'" = "'"

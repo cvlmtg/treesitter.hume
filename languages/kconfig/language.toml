@@ -1,0 +1,4 @@
+[[language]]
+name = "kconfig"
+file-types = ["Kconfig", { glob = "Kconfig.*" }]
+scope = "source.kconfig"

@@ -1,0 +1,12 @@
+[[language]]
+name = "purescript"
+scope = "source.purescript"
+injection-regex = "purescript"
+file-types = ["purs"]
+roots = ["spago.yaml", "spago.dhall", "bower.json"]
+comment-token = "--"
+block-comment-tokens = { start = "{-", end = "-}" }
+language-servers = [ "purescript-language-server" ]
+indent = { tab-width = 2, unit = "  " }
+auto-format = true
+formatter = { command = "purs-tidy", args = ["format"] }

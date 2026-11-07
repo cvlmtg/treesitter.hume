@@ -1,0 +1,7 @@
+[[language]]
+name = "spicedb"
+scope = "source.zed"
+injection-regex = "spicedb"
+file-types = ["zed"]
+comment-token = "//"
+indent = { tab-width = 2, unit = "  " }

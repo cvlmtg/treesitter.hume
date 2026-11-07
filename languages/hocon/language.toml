@@ -1,0 +1,11 @@
+[[language]]
+name = "hocon"
+scope = "source.conf"
+file-types = [
+  { glob = "**/src/*/resources/**/*.conf" },
+  { glob = "*scalafmt*.conf" },
+  { glob = "*scalafix*.conf" },
+]
+comment-token = "#"
+auto-format = true
+indent = { tab-width = 2, unit = "  " }

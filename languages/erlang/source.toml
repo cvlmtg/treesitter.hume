@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/the-mikedavis/tree-sitter-erlang"
+rev = "d85b18e76962d6a3ba131bc5b514d77558e82762"
+subpath = ""
+symbol = "tree_sitter_erlang"

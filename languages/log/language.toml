@@ -1,0 +1,4 @@
+[[language]]
+name = "log"
+scope = "source.log"
+file-types = ["log"]

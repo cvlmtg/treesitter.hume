@@ -1,0 +1,8 @@
+[[language]]
+name = "pkl"
+scope = "source.pkl"
+injection-regex = "pkl"
+file-types = ["pkl", "pcf", { glob = "PklProject" }]
+comment-token = "//"
+language-servers = ["pkl-lsp"]
+indent = { tab-width = 2, unit = "  " }

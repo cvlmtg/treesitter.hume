@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/Ripple-TS/ripple"
+rev = "49762f0a63de0d1845fcd2e6632639c095995336"
+subpath = "packages/tree-sitter"
+symbol = "tree_sitter_ripple"

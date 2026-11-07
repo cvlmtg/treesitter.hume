@@ -1,0 +1,8 @@
+[[language]]
+name = "erb"
+scope = "text.html.erb"
+injection-regex = "erb"
+file-types = ["erb"]
+block-comment-tokens = { start = "<!--", end = "-->" }
+indent = { tab-width = 2, unit = "  " }
+grammar = "embedded-template"

@@ -1,0 +1,8 @@
+[[language]]
+name = "vhdl"
+scope = "source.vhdl"
+file-types = ["vhd", "vhdl"]
+comment-token = "--"
+language-servers = [ "vhdl_ls" ]
+indent = { tab-width = 2, unit = "  " }
+injection-regex = "vhdl"

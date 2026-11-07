@@ -1,0 +1,15 @@
+[[language]]
+name = "styx"
+scope = "source.styx"
+injection-regex = "styx"
+file-types = ["styx"]
+comment-tokens = ["//", "///"]
+language-servers = ["styx"]
+indent = { tab-width = 2, unit = "  " }
+auto-format = true
+
+[language.auto-pairs]
+'(' = ')'
+'{' = '}'
+'"' = '"'
+"'" = "'"

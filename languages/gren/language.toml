@@ -1,0 +1,9 @@
+[[language]]
+name = "gren"
+scope = "source.gren"
+injection-regex = "gren"
+file-types = ["gren"]
+roots = ["gren.json"]
+comment-tokens = "--"
+block-comment-tokens = { start = "{-", end = "-}" }
+indent = { tab-width = 4, unit = "    " }

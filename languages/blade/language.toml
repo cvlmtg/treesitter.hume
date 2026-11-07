@@ -1,0 +1,6 @@
+[[language]]
+name = "blade"
+scope = "source.blade.php"
+file-types = [{ glob = "*.blade.php" }, "blade"]
+injection-regex = "blade"
+roots = ["composer.json", "index.php"]

@@ -1,0 +1,6 @@
+[[language]]
+name = "wast"
+scope = "source.wast"
+comment-token = ";;"
+block-comment-tokens = { start = "(;", end = ";)" }
+file-types = ["wast"]

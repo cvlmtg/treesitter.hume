@@ -1,0 +1,8 @@
+[[language]]
+name = "hurl"
+scope = "source.hurl"
+injection-regex = "hurl"
+file-types = ["hurl"]
+comment-token = "#"
+formatter = { command = "hurlfmt" }
+indent = { tab-width = 2, unit = "  " }

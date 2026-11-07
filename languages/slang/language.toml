@@ -1,0 +1,9 @@
+[[language]]
+name = "slang"
+scope = "source.lang"
+injection-regex = "slang"
+file-types = ["slang"]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+language-servers = [ "slangd" ]
+indent = { tab-width = 4, unit = "  " }

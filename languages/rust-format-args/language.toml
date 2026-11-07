@@ -1,0 +1,5 @@
+[[language]]
+name = "rust-format-args"
+scope = "source.rust-format-args"
+file-types = []
+injection-regex = "rust-format-args"

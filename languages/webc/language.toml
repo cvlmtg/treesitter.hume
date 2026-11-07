@@ -1,0 +1,8 @@
+[[language]]
+name = "webc"
+scope = "text.html.webc"
+injection-regex = "webc"
+file-types = ["webc"]
+block-comment-tokens = { start = "<!--", end = "-->" }
+indent = { tab-width = 2, unit = "  " }
+grammar = "html"

@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/tree-sitter-grammars/tree-sitter-bitbake"
+rev = "10bacac929ff36a1e8f4056503fe4f8717b21b94"
+subpath = ""
+symbol = "tree_sitter_bitbake"

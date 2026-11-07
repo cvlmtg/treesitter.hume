@@ -1,0 +1,6 @@
+[[language]]
+name = "pug"
+scope = "source.pug"
+file-types = ["pug"]
+comment-tokens = ["//", "//-"]
+indent = { tab-width = 2, unit = "  " }

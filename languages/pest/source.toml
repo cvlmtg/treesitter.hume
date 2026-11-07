@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/pest-parser/tree-sitter-pest"
+rev = "c19629a0c50e6ca2485c3b154b1dde841a08d169"
+subpath = ""
+symbol = "tree_sitter_pest"

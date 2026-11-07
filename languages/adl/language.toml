@@ -1,0 +1,13 @@
+[[language]]
+name = "adl"
+scope = "source.adl"
+injection-regex = "adl"
+file-types = ["adl"]
+roots = []
+comment-token = "//"
+indent = { tab-width = 2, unit = "  " }
+
+[language.auto-pairs]
+'"' = '"'
+'{' = '}'
+'<' = '>'

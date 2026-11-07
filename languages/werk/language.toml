@@ -1,0 +1,6 @@
+[[language]]
+name = "werk"
+scope = "source.werk"
+file-types = [ "werk", { glob = "Werkfile" } ]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }

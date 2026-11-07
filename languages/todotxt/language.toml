@@ -1,0 +1,7 @@
+[[language]]
+name = "todotxt"
+scope = "text.todotxt"
+# glob = "todo.txt" is too common and can conflict regular files, define in user config if necessary
+file-types = [{ glob = "*.todo.txt" }, "todotxt"]
+formatter = { command = "sort" }
+auto-format = true

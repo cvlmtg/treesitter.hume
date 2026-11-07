@@ -1,0 +1,9 @@
+[[language]]
+name = "ripple"
+scope = "source.ripple"
+file-types = [ "ripple" ]
+roots = [ "package.json" ]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 4, unit="    "}
+language-servers = [ "ripple-lsp" ]

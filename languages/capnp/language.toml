@@ -1,0 +1,7 @@
+[[language]]
+name = "capnp"
+scope = "source.capnp"
+injection-regex = "capnp"
+file-types = ["capnp"]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }

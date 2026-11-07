@@ -1,0 +1,19 @@
+[[language]]
+name = "metamath"
+scope = "source.metamath"
+file-types = [ "mm" ]
+injection-regex = "mm|metamath"
+roots = [ "set.mm" ]
+block-comment-tokens = { start = "$(", end = "$)" }
+indent = { tab-width = 2, unit = "  " }
+text-width = 80
+language-servers = [ "mm-lsp-server" ]
+
+[language.auto-pairs]
+"$" = "$"
+"(" = ")"
+"[" = "]"
+"{" = "}"
+"<" = ">"
+'"' = '"'
+"`" = "`"

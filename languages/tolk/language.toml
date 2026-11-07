@@ -1,0 +1,7 @@
+[[language]]
+name = "tolk"
+scope = "source.tolk"
+injection-regex = "tolk"
+file-types = ["tolk"]
+comment-token = "//"
+indent = { tab-width = 4, unit = "    " }

@@ -1,0 +1,8 @@
+[[language]]
+name = "bass"
+scope = "source.bass"
+injection-regex = "bass"
+file-types = ["bass"]
+comment-token = ";"
+indent = { tab-width = 2, unit = "  " }
+language-servers = [ "bass" ]

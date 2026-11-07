@@ -1,0 +1,5 @@
+[[language]]
+name = "pod"
+scope = "source.pod"
+injection-regex = "pod"
+file-types = ["pod"]

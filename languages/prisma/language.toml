@@ -1,0 +1,9 @@
+[[language]]
+name = "prisma"
+scope = "source.prisma"
+injection-regex = "prisma"
+file-types = ["prisma"]
+roots = ["package.json"]
+comment-token = "//"
+language-servers = [ "prisma-language-server" ]
+indent = { tab-width = 2, unit = "  " }

@@ -1,0 +1,7 @@
+[[language]]
+name = "ghostty"
+scope = "source.ghostty"
+file-types = ["ghostty", { glob = "ghostty/config" }]
+comment-tokens = "#"
+indent = { tab-width = 2, unit = "  " }
+language-servers = ["ghostty-ls"]

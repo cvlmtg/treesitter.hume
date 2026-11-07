@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/DerekStride/tree-sitter-sql"
+rev = "851e9cb257ba7c66cc8c14214a31c44d2f1e954e"
+subpath = ""
+symbol = "tree_sitter_sql"

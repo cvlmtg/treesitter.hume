@@ -1,0 +1,9 @@
+[[language]]
+name = "puppet"
+scope = "source.puppet"
+injection-regex = "puppet"
+file-types = ["pp"]
+comment-token = "#"
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 2, unit = "  " }
+language-servers = ["puppet-languageserver"]

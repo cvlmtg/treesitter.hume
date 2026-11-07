@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/treeman/tree-sitter-djot"
+rev = "759a61896ccb2200a4becec4443e768638a21d58"
+subpath = ""
+symbol = "tree_sitter_djot"

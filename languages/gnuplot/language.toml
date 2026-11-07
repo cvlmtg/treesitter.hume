@@ -1,0 +1,11 @@
+[[language]]
+name = "gnuplot"
+scope = "source.gnuplot"
+file-types = [ "gnuplot", "plot", "plt" ]
+injection-regex = "gnuplot"
+indent = { tab-width = 4, unit="    "}
+comment-token = "#"
+[language.auto-pairs]
+'(' = ')'
+'"' = '"'
+"'" = "'"

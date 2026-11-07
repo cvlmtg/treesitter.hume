@@ -1,0 +1,6 @@
+[[language]]
+name = "sgf"
+scope = "source.sgf"
+injection-regex = "sgf"
+file-types = ["sgf"]
+indent = { tab-width = 2, unit = "  " }

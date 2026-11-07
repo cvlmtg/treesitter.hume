@@ -1,0 +1,8 @@
+[[language]]
+name = "esdl"
+scope = "source.esdl"
+injection-regex = "esdl"
+file-types = ["gel", "esdl"]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }
+roots = ["gel.toml", "edgedb.toml"]

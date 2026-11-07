@@ -1,0 +1,8 @@
+[[language]]
+name = "meson"
+scope = "source.meson"
+injection-regex = "meson"
+file-types = [{ glob = "meson.build" }, { glob = "meson.options" }, { glob = "meson_options.txt" }]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }
+language-servers = ["mesonlsp"]

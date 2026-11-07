@@ -1,0 +1,10 @@
+[[language]]
+name = "codeql"
+scope = "source.ql"
+file-types = ["ql", "qll"]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 2, unit = "  " }
+injection-regex = "codeql"
+grammar = "ql"
+language-servers = ["codeql"]

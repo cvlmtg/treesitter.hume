@@ -1,0 +1,7 @@
+[[language]]
+name = "tql"
+scope = "source.tql"
+file-types = [ "tql" ]
+injection-regex = "tql"
+indent = {tab-width = 2, unit = "  "}
+comment-token = "//"

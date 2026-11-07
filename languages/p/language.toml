@@ -1,0 +1,7 @@
+[[language]]
+name = "p"
+scope = "source.p"
+injection-regex = "p"
+file-types = ["p"]
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 2, unit = "  " }

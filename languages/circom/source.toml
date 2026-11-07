@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/Decurity/tree-sitter-circom"
+rev = "02150524228b1e6afef96949f2d6b7cc0aaf999e"
+subpath = ""
+symbol = "tree_sitter_circom"

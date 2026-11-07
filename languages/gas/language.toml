@@ -1,0 +1,8 @@
+[[language]]
+name = "gas"
+scope = "source.gas"
+file-types = ["s"]
+injection-regex = "gas"
+comment-token = "#"
+indent = { tab-width = 8, unit = "        " }
+language-servers = ["asm-lsp"]

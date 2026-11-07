@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/flurie/tree-sitter-jq"
+rev = "13990f530e8e6709b7978503da9bc8701d366791"
+subpath = ""
+symbol = "tree_sitter_jq"

@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/dynamotn/tree-sitter-dbml"
+rev = "2e2fa5640268c33c3d3f27f7e676f631a9c68fd9"
+subpath = ""
+symbol = "tree_sitter_dbml"

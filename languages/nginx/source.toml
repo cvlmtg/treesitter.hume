@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://gitlab.com/joncoole/tree-sitter-nginx"
+rev = "f6d13cf6281b25f2ce342a49a41a10a0381e00f0"
+subpath = ""
+symbol = "tree_sitter_nginx"

@@ -1,0 +1,10 @@
+[[language]]
+name = "protobuf"
+scope = "source.proto"
+injection-regex = "proto"
+file-types = ["proto"]
+language-servers = [ "buf", "pbkit", "protols" ]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 2, unit = "  " }
+grammar = "proto"

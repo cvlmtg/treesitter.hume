@@ -1,0 +1,9 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+context = "8decd73460d26ef0a0befb745d022dd1fc2c38b8"
+
+[grammar]
+url = "https://github.com/briot/tree-sitter-ada"
+rev = "ba0894efa03beb70780156b91e28c716b7a4764d"
+subpath = ""
+symbol = "tree_sitter_ada"

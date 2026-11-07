@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/vlang/v-analyzer"
+rev = "59a8889d84a293d7c0366d14c8dbb0eec24fe889"
+subpath = "tree_sitter_v"
+symbol = "tree_sitter_v"

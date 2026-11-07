@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/egibs/tree-sitter-yara"
+rev = "eb3ede203275c38000177f72ec0f9965312806ef"
+subpath = ""
+symbol = "tree_sitter_yara"

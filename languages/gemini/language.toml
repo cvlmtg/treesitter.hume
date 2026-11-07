@@ -1,0 +1,4 @@
+[[language]]
+name = "gemini"
+scope = "source.gmi"
+file-types = ["gmi"]

@@ -1,0 +1,7 @@
+[[language]]
+name = "llvm"
+scope = "source.llvm"
+file-types = ["ll"]
+comment-token = ";"
+indent = { tab-width = 2, unit = "  " }
+injection-regex = "llvm"

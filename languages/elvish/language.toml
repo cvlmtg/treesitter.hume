@@ -1,0 +1,9 @@
+[[language]]
+name = "elvish"
+scope = "source.elvish"
+shebangs = ["elvish"]
+file-types = ["elv"]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }
+language-servers = [ "elvish" ]
+grammar = "elvish"

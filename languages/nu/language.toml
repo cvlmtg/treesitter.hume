@@ -1,0 +1,11 @@
+[[language]]
+name = "nu"
+scope = "source.nu"
+injection-regex = "nu"
+file-types = ["nu", "nuon"]
+shebangs = ["nu"]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }
+language-servers = [ "nu-lsp", "nu-lint" ]
+formatter = { command = "nufmt", args = ["--stdin"] } # https://github.com/nushell/nufmt
+auto-format = false

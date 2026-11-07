@@ -1,0 +1,7 @@
+[[language]]
+name = "supercollider"
+scope = "source.supercollider"
+injection-regex = "supercollider"
+file-types = ["scd", "sc", "quark"]
+comment-token = "//"
+indent = { tab-width = 4, unit = "\t" }

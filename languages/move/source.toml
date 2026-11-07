@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/tzakian/tree-sitter-move"
+rev = "8bc0d1692caa8763fef54d48068238d9bf3c0264"
+subpath = ""
+symbol = "tree_sitter_move"

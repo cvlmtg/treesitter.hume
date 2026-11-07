@@ -1,0 +1,9 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+context = "8decd73460d26ef0a0befb745d022dd1fc2c38b8"
+
+[grammar]
+url = "https://github.com/alex-pinkus/tree-sitter-swift"
+rev = "7b7909f2f6b9414be0958275f4c8e5d69c3bca43"
+subpath = ""
+symbol = "tree_sitter_swift"

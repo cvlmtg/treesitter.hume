@@ -1,0 +1,15 @@
+[[language]]
+name = "hy"
+scope = "source.hy"
+roots = ["pyproject.toml"]
+file-types = ["hy"]
+comment-token = ";"
+indent = { tab-width = 1, unit = " " }
+grammar = "scheme"
+language-servers = ["hyuga"]
+
+[language.auto-pairs]
+'(' = ')'
+'{' = '}'
+'[' = ']'
+'"' = '"'

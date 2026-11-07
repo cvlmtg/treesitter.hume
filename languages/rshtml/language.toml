@@ -1,0 +1,11 @@
+[[language]]
+name = "rshtml"
+file-types = [{ glob = "*.rs.html" }]
+scope = "source.rshtml"
+language-servers = [
+  "rshtml-analyzer",
+  "vscode-html-language-server",
+  "superhtml",
+]
+roots = ["Cargo.lock", "Cargo.toml"]
+indent = { tab-width = 2, unit = "  " }

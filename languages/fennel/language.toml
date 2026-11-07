@@ -1,0 +1,9 @@
+[[language]]
+name = "fennel"
+scope = "source.fennel"
+file-types = ["fnl", "fnlm"]
+shebangs = ["fennel"]
+comment-token = ";"
+language-servers = ["fennel-ls"]
+formatter = { command = "fnlfmt", args = ["-"]}
+indent = { tab-width = 2, unit = "  " }

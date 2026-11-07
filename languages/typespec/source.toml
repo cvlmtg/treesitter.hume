@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/happenslol/tree-sitter-typespec"
+rev = "0ee05546d73d8eb64635ed8125de6f35c77759fe"
+subpath = ""
+symbol = "tree_sitter_typespec"

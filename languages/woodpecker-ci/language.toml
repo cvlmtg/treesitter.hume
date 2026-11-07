@@ -1,0 +1,16 @@
+[[language]]
+name = "woodpecker-ci"
+scope = "source.woodpecker-ci"
+injection-regex = "^woodpecker-ci$"
+# https://woodpecker-ci.org/docs/usage/workflows
+file-types = [
+  { glob = ".woodpecker.yaml" },
+  { glob = ".woodpecker/*.yaml" },
+  { glob = ".woodpecker/*.yml" },
+]
+grammar = "yaml"
+indent = { tab-width = 2, unit = "  " }
+language-servers = ["yaml-language-server"]
+comment-token = "#"
+formatter = { command = "yamlfmt", args = ['-'] }
+auto-format = true

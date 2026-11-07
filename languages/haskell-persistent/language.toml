@@ -1,0 +1,6 @@
+[[language]]
+name = "haskell-persistent"
+scope = "source.persistentmodels"
+file-types = ["persistentmodels"]
+comment-token = "--"
+indent = { tab-width = 2, unit = "  " }

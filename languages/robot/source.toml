@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/Hubro/tree-sitter-robot"
+rev = "93c48ca74274a60688a3beda7f6c8ae3145efce7"
+subpath = ""
+symbol = "tree_sitter_robot"

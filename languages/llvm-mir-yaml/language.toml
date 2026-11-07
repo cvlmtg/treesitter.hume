@@ -1,0 +1,9 @@
+[[language]]
+name = "llvm-mir-yaml"
+# TODO allow languages to point to their grammar like so:
+#
+#     grammar = "yaml"
+scope = "source.yaml"
+file-types = ["mir"]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }

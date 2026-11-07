@@ -1,0 +1,8 @@
+[[language]]
+name = "textproto"
+file-types = ["txtpb", "textpb", "textproto"]
+comment-token = "#"
+scope = "source.textproto"
+indent = { tab-width = 2, unit = "  " }
+formatter = { command = "txtpbfmt" }
+auto-format = true

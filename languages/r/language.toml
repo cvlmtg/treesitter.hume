@@ -1,0 +1,9 @@
+[[language]]
+name = "r"
+scope = "source.r"
+injection-regex = "(r|R)"
+file-types = ["r", "R", { glob = ".Rprofile" }, { glob = "Rprofile.site" }, { glob = ".RHistory" }, { glob = "radian/profile" }, { glob = ".radian_profile" }]
+shebangs = ["r", "R"]
+comment-tokens = ["#", "#'"]
+indent = { tab-width = 2, unit = "  " }
+language-servers = [ "r" ]

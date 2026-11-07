@@ -1,0 +1,10 @@
+[[language]]
+name = "inko"
+auto-format = true
+scope = "source.inko"
+injection-regex = "inko"
+file-types = ["inko"]
+roots = ["inko.pkg"]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }
+formatter = { command = "inko", args = ["fmt", "-"] }

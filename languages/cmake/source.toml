@@ -1,0 +1,9 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+context = "8decd73460d26ef0a0befb745d022dd1fc2c38b8"
+
+[grammar]
+url = "https://github.com/uyha/tree-sitter-cmake"
+rev = "c7b2a71e7f8ecb167fad4c97227c838439280175"
+subpath = ""
+symbol = "tree_sitter_cmake"
