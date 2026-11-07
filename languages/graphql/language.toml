@@ -4,6 +4,7 @@ scope = "source.graphql"
 injection-regex = "graphql"
 file-types = ["gql", "graphql", "graphqls"]
 language-servers = [ "graphql-language-service" ]
+# `"""` delimits a block string, a field description, not a comment:
+# GraphQL comments are `#` only.
 comment-token = "#"
-block-comment-tokens = { start = "\"\"\"", end = "\"\"\"" }
 indent = { tab-width = 2, unit = "  " }

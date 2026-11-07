@@ -2,7 +2,9 @@
 name = "v"
 scope = "source.v"
 file-types = ["v", "vv", "vsh"]
-shebangs = ["v run"]
+# HUME matches a shebang against the one program a `#!` line runs, and
+# `#!/usr/bin/env v run` runs `v`.
+shebangs = ["v"]
 roots = ["v.mod"]
 language-servers = [ "vlang-language-server" ]
 auto-format = true
