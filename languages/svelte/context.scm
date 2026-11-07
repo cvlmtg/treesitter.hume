@@ -1,9 +1,8 @@
-; inherits: html
-
 [
-  (if_statement)
-  (else_if_block)
-  (each_statement)
-  (await_statement)
-  (key_statement)
+  (element)
+  (if_block)
+  (else_if_clause)
+  (each_block)
+  (await_block)
+  (key_block)
 ] @context

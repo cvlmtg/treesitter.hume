@@ -108,7 +108,9 @@ pbkit = { command = "pb", args = [ "lsp" ] }
 perlnavigator = { command = "perlnavigator", args= ["--stdio"] }
 pest-language-server = { command = "pest-language-server" }
 pkl-lsp = { command = "pkl-lsp" }
-pony-lsp = { command = "pony-lsp", args = ["--stdio"], config = {defines = [], ponypath = []}}
+# pony-lsp reads these settings only from a workspace/configuration request
+# for its "pony-lsp" section, never from initializationOptions.
+pony-lsp = { command = "pony-lsp", args = ["--stdio"], config = { pony-lsp = { defines = [], ponypath = [] } } }
 prisma-language-server = { command = "prisma-language-server", args = ["--stdio"], config.prisma.enableDiagnostics = true }
 puppet-languageserver = { command = "puppet-languageserver", args = ["--stdio"] }
 purescript-language-server = { command = "purescript-language-server", args = ["--stdio"] }
@@ -193,7 +195,8 @@ godot = { command = "ncat", args = ["127.0.0.1", "6005"] }
 command = "actions-languageserver"
 args = ["--stdio"]
 
-[language-server.actions-language-server.config.actions-language-server]
+# The server reads initializationOptions.sessionToken at the top level.
+[language-server.actions-language-server.config]
 sessionToken = ""
 
 [language-server.ansible-language-server]

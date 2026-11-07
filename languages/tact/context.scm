@@ -19,11 +19,7 @@
 
 ; functions
 ; ---------
-(asm_function
-  body: (_
-    (_) @context.end)) @context
-
-(global_function
+(function
   body: (_
     (_) @context.end)) @context
 
@@ -43,10 +39,6 @@
   body: (_
     (_) @context.end)) @context
 
-(storage_function
-  body: (_
-    (_) @context.end)) @context
-
 ; statements
 ; ----------
 (if_statement
@@ -55,14 +47,6 @@
 
 (else_clause
   (_
-    (_) @context.end)) @context
-
-(try_statement
-  body: (_
-    (_) @context.end)) @context
-
-(catch_clause
-  body: (_
     (_) @context.end)) @context
 
 (while_statement
@@ -74,10 +58,6 @@
     (_) @context.end)) @context
 
 (do_until_statement
-  body: (_
-    (_) @context.end)) @context
-
-(foreach_statement
   body: (_
     (_) @context.end)) @context
 

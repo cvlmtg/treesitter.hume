@@ -11,7 +11,7 @@
     target: (identifier)
     (arguments
       (_)))) @_op
-  (#lua-match? @_op "@[%w_]+")) @context
+  (#match? @_op "@[A-Za-z0-9_]+")) @context
 
 (stab_clause
   right: (body

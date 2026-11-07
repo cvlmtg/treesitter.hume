@@ -2,7 +2,7 @@
 
 (while) @context
 
-(if) @context
+(conditional) @context
 
 (else) @context
 
