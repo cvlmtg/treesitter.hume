@@ -1,0 +1,69 @@
+name: Languages
+
+# Builds every language the way a Linux release does, which compiles each
+# query file against its grammar, whenever the vendored languages change.
+# The upstream workflow calls it with merge-upstream, to build main with a
+# new snapshot merged in.
+on:
+  push:
+    branches: [main]
+    paths: ['languages/**', 'notices/**', 'exclusions.toml']
+  pull_request:
+    branches: [main]
+    paths: ['languages/**', 'notices/**', 'exclusions.toml']
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      merge-upstream:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build every language
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: ${{ inputs.merge-upstream && '0' || '1' }}
+
+      - name: Merge the upstream branch
+        if: inputs.merge-upstream
+        run: >-
+          git -c user.name="github-actions[bot]"
+          -c user.email="41898282+github-actions[bot]@users.noreply.github.com"
+          merge --no-edit origin/upstream
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Build the tool
+        run: cargo build --release --locked
+
+      # The compiler a Linux release builds grammars with. Set after the
+      # tool is built, so only the grammars use it.
+      - name: Compile grammars with zig
+        run: |
+          echo "CC=zig cc" >> "$GITHUB_ENV"
+          echo "CXX=zig c++" >> "$GITHUB_ENV"
+
+      - name: Build grammars
+        run: target/release/hume-grammar-build build --all --out grammars
+
+      - name: Bundle grammars
+        run: target/release/hume-grammar-build bundle grammars dist
+
+      - name: Verify the bundle
+        run: bash scripts/verify-bundle.sh dist

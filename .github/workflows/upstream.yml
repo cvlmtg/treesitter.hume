@@ -1,0 +1,81 @@
+name: Upstream
+
+# Monthly, and by hand: snapshot Helix's and nvim-treesitter-context's
+# default branches into the upstream branch, build it, and open a pull
+# request that merges it into main. Merge that pull request with a merge
+# commit, never a squash or a rebase, so the next snapshot merges from this
+# one.
+on:
+  schedule:
+    - cron: '0 6 1 * *'
+  workflow_dispatch:
+
+concurrency:
+  group: upstream
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  snapshot:
+    name: Snapshot upstream
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.import.outputs.changed }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Import the default branches
+        id: import
+        run: |
+          set -euo pipefail
+          helix="$(git ls-remote https://github.com/helix-editor/helix refs/heads/master | cut -f1)"
+          context="$(git ls-remote https://github.com/nvim-treesitter/nvim-treesitter-context refs/heads/master | cut -f1)"
+          tree="$RUNNER_TEMP/upstream"
+          git worktree add -B upstream "$tree" origin/upstream
+          old_helix="$(python3 -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))["helix"])' "$tree/upstream.toml")"
+          old_context="$(python3 -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))["context"])' "$tree/upstream.toml")"
+          python3 scripts/import-upstream.py --helix "$helix" --context "$context" --into "$tree" > "$RUNNER_TEMP/report.txt"
+          git -C "$tree" add -A
+          if git -C "$tree" diff --cached --quiet; then
+            echo "No upstream change."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          {
+            bash scripts/upstream-changes.sh "$old_helix" "$helix" "$old_context" "$context" "$RUNNER_TEMP/report.txt"
+            printf '\nThe build of main with this snapshot merged: %s\n' \
+              "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } > "$RUNNER_TEMP/body.md"
+          git -C "$tree" \
+            -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "chore(upstream): snapshot Helix ${helix:0:8} and nvim-treesitter-context ${context:0:8}"
+          git -C "$tree" push origin upstream
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update the pull request
+        if: steps.import.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          title="Merge upstream snapshot"
+          number="$(gh pr list --head upstream --base main --state open --json number --jq '.[].number')"
+          if [[ -n "$number" ]]; then
+            gh pr edit "$number" --body-file "$RUNNER_TEMP/body.md"
+          else
+            gh pr create --head upstream --base main --title "$title" --body-file "$RUNNER_TEMP/body.md"
+          fi
+
+  # A pull request opened with the workflow's token starts no workflow, so
+  # the build runs here.
+  build:
+    needs: snapshot
+    if: needs.snapshot.outputs.changed == 'true'
+    uses: ./.github/workflows/languages.yml
+    with:
+      merge-upstream: true
