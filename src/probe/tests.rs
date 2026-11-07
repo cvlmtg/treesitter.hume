@@ -22,13 +22,16 @@ fn library(grammar_dir: &Path) -> (tempfile::TempDir, PathBuf) {
 #[test]
 fn the_abi_is_read_from_the_built_library() {
     let (_out, library) = library(&fixture());
-    assert_eq!(abi(&library, "tree_sitter_probe").expect("probe"), 15);
+    assert_eq!(
+        check(&library, "tree_sitter_probe", &[]).expect("probe"),
+        15
+    );
 }
 
 #[test]
 fn a_missing_symbol_is_an_error_naming_it() {
     let (_out, library) = library(&fixture());
-    let err = abi(&library, "tree_sitter_other").expect_err("no such symbol");
+    let err = check(&library, "tree_sitter_other", &[]).expect_err("no such symbol");
     assert!(err.to_string().contains("tree_sitter_other"), "{err}");
 }
 
@@ -50,6 +53,39 @@ fn an_unsupported_abi_is_an_error() {
     let parser = parser.replace("#define LANGUAGE_VERSION 15", "#define LANGUAGE_VERSION 12");
     fs::write(src.join("parser.c"), parser).expect("parser");
     let (_out, library) = library(grammar.path());
-    let err = abi(&library, "tree_sitter_probe").expect_err("ABI 12");
+    let err = check(&library, "tree_sitter_probe", &[]).expect_err("ABI 12");
     assert!(err.to_string().contains("ABI 12"), "{err}");
+}
+
+fn queries(files: &[(&str, &str)]) -> Vec<(String, String)> {
+    files
+        .iter()
+        .map(|(file, text)| (file.to_string(), text.to_string()))
+        .collect()
+}
+
+#[test]
+fn queries_that_match_the_grammar_compile() {
+    let (_out, library) = library(&fixture());
+    let queries = queries(&[
+        ("highlights.scm", "(word) @variable\n"),
+        ("context.scm", "(source) @context\n"),
+    ]);
+    assert_eq!(
+        check(&library, "tree_sitter_probe", &queries).expect("probe"),
+        15
+    );
+}
+
+#[test]
+fn a_query_naming_a_node_the_grammar_lacks_is_an_error_naming_its_file() {
+    let (_out, library) = library(&fixture());
+    let queries = queries(&[
+        ("highlights.scm", "(word) @variable\n"),
+        ("indents.scm", "(word) @indent\n(function_item) @indent\n"),
+    ]);
+    let err = check(&library, "tree_sitter_probe", &queries).expect_err("unknown node");
+    let message = err.to_string();
+    assert!(message.starts_with("queries/indents.scm: "), "{message}");
+    assert!(message.contains("function_item"), "{message}");
 }

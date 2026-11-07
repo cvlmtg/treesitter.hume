@@ -226,9 +226,10 @@ fn build_repo(id: usize, repo: &Repo, context: &Context) -> Vec<Outcome> {
     outcomes
 }
 
-/// `pin`'s archive: its library, its resolved queries, its manifest, and
-/// the license files and notices for what it redistributes. `checkout` is
-/// the grammar's repository.
+/// `pin`'s archive: its library, its resolved queries, each of which must
+/// compile against the library, its manifest, and the license files and
+/// notices for what it redistributes. `checkout` is the grammar's
+/// repository.
 fn package(
     pin: &Pin,
     checkout: &Path,
@@ -237,8 +238,19 @@ fn package(
     warnings: &mut Vec<String>,
 ) -> Result<Vec<u8>, String> {
     let licenses = licenses::grammar(pin, checkout).map_err(|e| e.to_string())?;
-    let abi = probe::abi(library, &pin.symbol).map_err(|e| e.to_string())?;
     let request = context.request;
+    let mut queries = Vec::new();
+    for file in request.queries.query_files(&pin.name) {
+        let resolved = queries::resolve(&pin.name, |language| {
+            request.queries.query(language, file).map(str::to_string)
+        })
+        .map_err(|e: QueryError| format!("{file}: {e}"))?;
+        for parent in resolved.missing {
+            warnings.push(format!("{file} inherits {parent:?}, which has no {file}"));
+        }
+        queries.push((file.to_string(), resolved.text));
+    }
+    let abi = probe::check(library, &pin.symbol, &queries).map_err(|e| e.to_string())?;
     let manifest = Manifest {
         name: &pin.name,
         url: &pin.url,
@@ -266,16 +278,11 @@ fn package(
         "queries/NOTICE".to_string(),
         licenses::queries_notice(&pin.name, &pin.upstream, request.tag).into_bytes(),
     ));
-    for file in request.queries.query_files(&pin.name) {
-        let resolved = queries::resolve(&pin.name, |language| {
-            request.queries.query(language, file).map(str::to_string)
-        })
-        .map_err(|e: QueryError| format!("{file}: {e}"))?;
-        for parent in resolved.missing {
-            warnings.push(format!("{file} inherits {parent:?}, which has no {file}"));
-        }
-        files.push((format!("queries/{file}"), resolved.text.into_bytes()));
-    }
+    files.extend(
+        queries
+            .into_iter()
+            .map(|(file, text)| (format!("queries/{file}"), text.into_bytes())),
+    );
     bundle::archive(&files).map_err(|e| e.to_string())
 }
 

@@ -58,6 +58,8 @@ const PROBE_QUERIES: &[(&str, &str)] = &[
     ("textobjects.scm", "(word) @word.inside\n"),
 ];
 const STRING_QUERIES: &[(&str, &str)] = &[("highlights.scm", "(word) @string\n")];
+/// Queries naming a node the probe grammar does not have.
+const STALE_QUERIES: &[(&str, &str)] = &[("highlights.scm", "(function_item) @function\n")];
 const BASE_QUERIES: &[(&str, &str)] = &[("highlights.scm", "(source) @base\n")];
 const BASE_SOURCE: &str = "[upstream]\nhelix = \"0123456789abcdef0123456789abcdef01234567\"\n";
 
@@ -93,17 +95,17 @@ fn languages(sources: &[(String, String)]) -> Languages<'_> {
     folders.extend(sources.iter().map(|(name, source)| Folder {
         name,
         source,
-        queries: if name == "probe" {
-            PROBE_QUERIES
-        } else {
-            STRING_QUERIES
+        queries: match name.as_str() {
+            "probe" => PROBE_QUERIES,
+            "stale" => STALE_QUERIES,
+            _ => STRING_QUERIES,
         },
     }));
     Languages::parse(folders, "").expect("languages")
 }
 
 fn run(languages: &Languages, out: &Path) -> Result<Report, BuildError> {
-    let pins = ["probe", "twin", "broken"]
+    let pins = ["probe", "twin", "broken", "stale"]
         .iter()
         .filter_map(|name| languages.get(name))
         .collect();
@@ -276,4 +278,22 @@ fn a_grammar_without_a_license_file_fails_and_leaves_the_others_built() {
             format!("no license file in the repository root at {unlicensed_rev}")
         )]
     );
+}
+
+#[test]
+fn a_query_that_does_not_compile_fails_its_language_and_leaves_the_others_built() {
+    let (grammar, grammar_rev) = grammar_repo(&[("LICENSE", b"MIT terms\n")]);
+    let url = file_url(grammar.path());
+    let sources = sources(&[("probe", &url, &grammar_rev), ("stale", &url, &grammar_rev)]);
+    let languages = languages(&sources);
+    let out = tempfile::tempdir().expect("out");
+
+    let report = run(&languages, out.path()).expect("build");
+
+    assert_eq!(report.built, ["probe"]);
+    assert_eq!(report.failed.len(), 1, "{:?}", report.failed);
+    let (language, reason) = &report.failed[0];
+    assert_eq!(language, "stale");
+    assert!(reason.starts_with("queries/highlights.scm: "), "{reason}");
+    assert_eq!(listing(out.path()), ["probe.tar.gz"]);
 }
