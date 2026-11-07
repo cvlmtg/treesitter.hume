@@ -1,0 +1,7 @@
+[[language]]
+name = "thrift"
+scope = "source.thrift"
+file-types = ["thrift"]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 2, unit = "  " }

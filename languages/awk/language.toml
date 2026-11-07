@@ -1,0 +1,8 @@
+[[language]]
+name = "awk"
+scope = "source.awk"
+injection-regex = "awk"
+file-types = ["awk", "gawk", "nawk", "mawk"]
+comment-token = "#"
+language-servers = [ "awk-language-server" ]
+indent = { tab-width = 2, unit = "  " }

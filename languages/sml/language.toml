@@ -1,0 +1,14 @@
+[[language]]
+name = "sml"
+scope = "source.sml"
+injection-regex = "sml"
+file-types = ["sml", "sig", "fun"]
+roots = ["millet.toml"]
+block-comment-tokens = { start = "(*", end = "*)" }
+language-servers = ["millet"]
+
+[language.auto-pairs]
+'(' = ')'
+'{' = '}'
+'[' = ']'
+'"' = '"'

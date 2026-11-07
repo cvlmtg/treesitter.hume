@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/EmranMR/tree-sitter-blade"
+rev = "5dbdcb0ccbe91e64b038b41545d3acc26c74907a"
+subpath = ""
+symbol = "tree_sitter_blade"

@@ -1,0 +1,9 @@
+[[language]]
+name = "clarity"
+scope = "source.clar"
+injection-regex = "clarity"
+file-types = ["clar"]
+roots = ["Clarinet.toml"]
+comment-tokens = ";;"
+indent = { tab-width = 2, unit = "  " }
+language-servers = [ "clarinet" ]

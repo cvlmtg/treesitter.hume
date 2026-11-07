@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://gitlab.com/cryptomilk/tree-sitter-rpmspec"
+rev = "d0275cd1316d9b7a2e0fae028ce95a5a18741e1d"
+subpath = ""
+symbol = "tree_sitter_rpmspec"

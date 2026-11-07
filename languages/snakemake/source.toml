@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/osthomas/tree-sitter-snakemake"
+rev = "e909815acdbe37e69440261ebb1091ed52e1dec6"
+subpath = ""
+symbol = "tree_sitter_snakemake"

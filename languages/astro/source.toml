@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/virchau13/tree-sitter-astro"
+rev = "947e93089e60c66e681eba22283f4037841451e7"
+subpath = ""
+symbol = "tree_sitter_astro"

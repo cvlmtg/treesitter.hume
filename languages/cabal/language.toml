@@ -1,0 +1,8 @@
+[[language]]
+name = "cabal"
+scope = "source.cabal"
+file-types = [ "cabal" ]
+roots = ["cabal.project", "Setup.hs"]
+indent = { tab-width = 2, unit = "  " }
+comment-token = "--"
+language-servers = [ "haskell-language-server" ]

@@ -1,0 +1,9 @@
+[[language]]
+name = "rego"
+scope = "source.rego"
+injection-regex = "rego"
+file-types = ["rego"]
+auto-format = true
+comment-token = "#"
+language-servers = [ "regols" ]
+grammar = "rego"

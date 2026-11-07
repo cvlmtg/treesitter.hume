@@ -1,0 +1,9 @@
+[[language]]
+name = "solidity"
+scope = "source.sol"
+injection-regex = "(sol|solidity)"
+file-types = ["sol"]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 4, unit = "    " }
+language-servers = [ "solc" ]

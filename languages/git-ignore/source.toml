@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/shunsambongi/tree-sitter-gitignore"
+rev = "f4685bf11ac466dd278449bcfe5fd014e94aa504"
+subpath = ""
+symbol = "tree_sitter_gitignore"

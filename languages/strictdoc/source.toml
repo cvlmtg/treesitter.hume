@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/manueldiagostino/tree-sitter-strictdoc"
+rev = "bba07bd4d41835e3e5f456a9603ce601b1be1937"
+subpath = ""
+symbol = "tree_sitter_strictdoc"

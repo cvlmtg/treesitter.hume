@@ -1,0 +1,7 @@
+[[language]]
+name = "penrose"
+scope = "source.penrose"
+auto-format = false
+file-types = ["substance", "style", "domain"]
+comment-tokens = "--"
+indent = { tab-width = 2, unit = "  " }

@@ -1,0 +1,6 @@
+[[language]]
+name = "org"
+scope = "source.org"
+injection-regex = "org"
+file-types = ["org"]
+indent = { tab-width = 2, unit = "  " }

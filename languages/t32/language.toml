@@ -1,0 +1,7 @@
+[[language]]
+name = "t32"
+scope = "source.t32"
+injection-regex = "t32"
+file-types = ["cmm", "t32"]
+comment-token = ";"
+indent = { tab-width = 2, unit = "  " }

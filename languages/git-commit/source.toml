@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/gbprod/tree-sitter-gitcommit"
+rev = "49715a9e6f19ce3d33b875aacdd6ad8ddaee0ffe"
+subpath = ""
+symbol = "tree_sitter_gitcommit"

@@ -1,0 +1,10 @@
+[[language]]
+name = "dart"
+scope = "source.dart"
+file-types = ["dart"]
+roots = ["pubspec.yaml"]
+auto-format = true
+comment-tokens = ["//", "///"]
+block-comment-tokens = { start = "/*", end = "*/" }
+language-servers = [ "dart" ]
+indent = { tab-width = 2, unit = "  " }

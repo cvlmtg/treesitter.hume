@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/stsewd/tree-sitter-comment"
+rev = "66272d2b6c73fb61157541b69dd0a7ce7b42a5ad"
+subpath = ""
+symbol = "tree_sitter_comment"

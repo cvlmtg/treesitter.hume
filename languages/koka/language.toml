@@ -1,0 +1,8 @@
+[[language]]
+name = "koka"
+scope = "source.koka"
+injection-regex = "koka"
+file-types = ["kk"]
+comment-token = "//"
+indent = { tab-width = 8, unit = "  " }
+language-servers = ["koka"]

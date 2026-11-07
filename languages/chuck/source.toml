@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/tymbalodeon/tree-sitter-chuck"
+rev = "68fb7bdba480915d87177feaa5593a666c0bb602"
+subpath = ""
+symbol = "tree_sitter_chuck"

@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/little-bonsai/tree-sitter-werk"
+rev = "92b0f7fe98465c4c435794a58e961306193d1c1e"
+subpath = ""
+symbol = "tree_sitter_werk"

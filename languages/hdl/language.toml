@@ -1,0 +1,7 @@
+[[language]]
+name = "hdl"
+scope = "source.hdl"
+file-types = ["hdl"]
+indent = { tab-width = 4, unit = "    " }
+injection-regex = "hdl"
+language-servers = [ "hdls" ]

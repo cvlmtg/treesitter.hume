@@ -1,0 +1,8 @@
+[[language]]
+name = "nestedtext"
+scope = "text.nested"
+injection-regex = "nestedtext"
+file-types = ["nt"]
+comment-token = "#"
+indent = { tab-width = 4, unit = "    " }
+grammar = "yaml"

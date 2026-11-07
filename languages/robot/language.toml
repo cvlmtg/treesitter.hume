@@ -1,0 +1,9 @@
+[[language]]
+name = "robot"
+language-id="robotframework"
+scope = "source.robot"
+injection-regex = "robot"
+file-types = ["robot", "resource"]
+comment-token = "#"
+indent = { tab-width = 4, unit = " " }
+language-servers = [ "robotcode", "robotframework_ls" ]

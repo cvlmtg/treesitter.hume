@@ -1,0 +1,8 @@
+[[language]]
+name = "tcl"
+scope = "source.tcl"
+injection-regex = "tcl"
+file-types = [ "tcl" ]
+shebangs = [ "tclsh", "tclish", "jimsh", "wish" ]
+comment-token = '#'
+indent = { tab-width = 4, unit = "    " }

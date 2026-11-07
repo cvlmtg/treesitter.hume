@@ -1,0 +1,7 @@
+[[language]]
+name = "task"
+scope = "source.task"
+injection-regex = "task"
+file-types = ["task"]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }

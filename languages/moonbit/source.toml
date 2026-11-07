@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/moonbitlang/tree-sitter-moonbit"
+rev = "36191d7fe4ec4298c8c1f251af6a82939f8e9a67"
+subpath = ""
+symbol = "tree_sitter_moonbit"

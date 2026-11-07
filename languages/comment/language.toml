@@ -1,0 +1,5 @@
+[[language]]
+name = "comment"
+scope = "scope.comment"
+file-types = []
+injection-regex = "comment"

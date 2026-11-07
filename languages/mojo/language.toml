@@ -1,0 +1,11 @@
+[[language]]
+name = "mojo"
+scope = "source.mojo"
+roots = ["pixi.toml", "pixi.lock"]
+injection-regex = "mojo"
+file-types = ["mojo", "🔥"]
+language-servers = [ "mojo-lsp-server" ]
+comment-token = "#"
+indent = { tab-width = 4, unit = "    " }
+auto-format = true
+formatter = { command = "pixi", args = ["run", "mojo" , "format", "-q", "-"]}

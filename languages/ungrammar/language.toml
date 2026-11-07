@@ -1,0 +1,7 @@
+[[language]]
+name = "ungrammar"
+scope = "source.ungrammar"
+injection-regex = "ungrammar"
+file-types = ["ungram", "ungrammar"]
+comment-token = "//"
+indent = { tab-width = 2, unit = "  " }

@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/mfelsche/tree-sitter-ponylang"
+rev = "ef66b151bc2604f431b5668fcec4747db4290e11"
+subpath = ""
+symbol = "tree_sitter_ponylang"

@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/vala-lang/tree-sitter-vala"
+rev = "97e6db3c8c73b15a9541a458d8e797a07f588ef4"
+subpath = ""
+symbol = "tree_sitter_vala"

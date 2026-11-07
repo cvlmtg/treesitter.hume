@@ -1,0 +1,9 @@
+[[language]]
+name = "cairo"
+scope = "source.cairo"
+injection-regex = "cairo"
+file-types = ["cairo"]
+comment-token = "//"
+indent = { tab-width = 4, unit = "    " }
+# auto-format = true
+language-servers = [ "cairo-language-server" ]

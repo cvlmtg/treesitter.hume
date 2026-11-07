@@ -1,0 +1,5 @@
+[[language]]
+name = "scfg"
+scope = "source.scfg"
+file-types = [{ glob = "kanshi/config" }]
+comment-token = "#"

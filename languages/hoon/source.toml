@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/urbit-pilled/tree-sitter-hoon"
+rev = "1545137aadcc63660c47db9ad98d02fa602655d0"
+subpath = ""
+symbol = "tree_sitter_hoon"

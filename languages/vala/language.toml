@@ -1,0 +1,9 @@
+[[language]]
+name = "vala"
+scope = "source.vala"
+injection-regex = "vala"
+file-types = ["vala", "vapi"]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 2, unit = "  " }
+language-servers = [ "vala-language-server" ]

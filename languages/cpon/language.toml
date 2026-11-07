@@ -1,0 +1,8 @@
+[[language]]
+name = "cpon"
+scope = "scope.cpon"
+injection-regex = "cpon"
+file-types = ["cpon", "cp"]
+auto-format = true
+comment-token = "//"
+indent = { tab-width = 2, unit = "  " }

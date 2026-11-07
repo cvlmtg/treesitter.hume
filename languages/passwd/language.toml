@@ -1,0 +1,4 @@
+[[language]]
+name = "passwd"
+scope = "source.passwd"
+file-types = [{ glob = "passwd" }]

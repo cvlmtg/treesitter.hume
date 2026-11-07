@@ -1,0 +1,14 @@
+[[language]]
+name = "tsq"
+scope = "source.tsq"
+file-types = [{ glob = "queries/*.scm" }, { glob = "injections.scm" },  { glob = "highlights.scm" },  { glob = "indents.scm" },  { glob = "textobjects.scm" },  { glob = "locals.scm" },  { glob = "tags.scm" }]
+comment-token = ";"
+injection-regex = "tsq"
+language-servers = ["ts_query_ls"]
+grammar = "query"
+indent = { tab-width = 2, unit = "  " }
+
+[language.auto-pairs]
+'(' = ')'
+'[' = ']'
+'"' = '"'

@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/ton-blockchain/ton-language-server"
+rev = "e90dbb89f8ec8fbf8a16b61a31d6cc19a840de4f"
+subpath = "server/src/languages/tolk/tree-sitter-tolk"
+symbol = "tree_sitter_tolk"

@@ -1,0 +1,11 @@
+[[language]]
+name = "moonbit"
+scope = "source.moonbit"
+injection-regex = "moonbit|mbt"
+file-types = ["mbt", "mbti"]
+roots = ["moon.mod.json"]
+comment-tokens = ["//", "///"]
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 2, unit = "  " }
+language-servers = ["moonbit-lsp"]
+auto-format = true

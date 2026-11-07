@@ -1,0 +1,8 @@
+[[language]]
+name = "drools"
+scope = "source.drools"
+file-types = ["drl"]
+roots = ["pom.xml", ".git"]
+comment-tokens = "//"
+language-servers = [ "drools-lsp" ]
+formatter = { command = "drools-fmt" }

@@ -1,0 +1,20 @@
+[[language]]
+name = "debian"
+scope = "text.debian"
+file-types = [
+  "dsc",
+  "changes",
+  { glob = "debian/control" },
+  { glob = "debian/copyright" },
+  { glob = "debian/watch" },
+  { glob = "debian/changelog" },
+  { glob = "debian/source/format" },
+  { glob = "debian/source/options" },
+  { glob = "debian/source/local-options" },
+  { glob = "debian/tests/control" },
+  { glob = "debian/upstream/metadata" },
+  { glob = "debian/rules" },
+  { glob = "etc/apt/sources.list.d/*.sources" }
+]
+comment-tokens = "#"
+language-servers = [ "debian-lsp" ]

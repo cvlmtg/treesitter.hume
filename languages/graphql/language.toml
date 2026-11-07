@@ -1,0 +1,9 @@
+[[language]]
+name = "graphql"
+scope = "source.graphql"
+injection-regex = "graphql"
+file-types = ["gql", "graphql", "graphqls"]
+language-servers = [ "graphql-language-service" ]
+comment-token = "#"
+block-comment-tokens = { start = "\"\"\"", end = "\"\"\"" }
+indent = { tab-width = 2, unit = "  " }

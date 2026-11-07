@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/uncenter/tree-sitter-tera"
+rev = "3a38c368e806268daac9923a27e72bcafbbc16bb"
+subpath = ""
+symbol = "tree_sitter_tera"

@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/ventojs/tree-sitter-vento"
+rev = "3b32474bc29584ea214e4e84b47102408263fe0e"
+subpath = ""
+symbol = "tree_sitter_vento"

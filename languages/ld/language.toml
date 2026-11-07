@@ -1,0 +1,7 @@
+[[language]]
+name = "ld"
+scope = "source.ld"
+injection-regex = "ld"
+file-types = ["ld"]
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 2, unit = "  " }

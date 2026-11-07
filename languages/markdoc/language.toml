@@ -1,0 +1,6 @@
+[[language]]
+name = "markdoc"
+scope = "text.markdoc"
+block-comment-tokens = { start = "<!--", end = "-->" }
+file-types = ["mdoc"]
+language-servers = [ "markdoc-ls" ]

@@ -1,0 +1,5 @@
+[[language]]
+name = "dunstrc"
+scope = "source.dunstrc"
+comment-tokens = ["#", ";"]
+file-types = [ { glob = "dunst/dunstrc" } ]

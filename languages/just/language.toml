@@ -1,0 +1,9 @@
+[[language]]
+name = "just"
+scope = "source.just"
+file-types = ["just", { glob = "justfile" }, { glob = "Justfile" }, { glob = ".justfile" }, { glob = ".Justfile" }]
+injection-regex = "just"
+comment-token = "#"
+indent = { tab-width = 4, unit = "    " }
+language-servers = ["just-lsp"]
+formatter = { command = "just", args = ["--fmt", "--justfile", "-"] }

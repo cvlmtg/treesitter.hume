@@ -1,0 +1,7 @@
+[[language]]
+name = "git-attributes"
+scope = "source.gitattributes"
+file-types = [{ glob = ".gitattributes" }, { glob = ".config/git/attributes" }]
+injection-regex = "git-attributes"
+comment-token = "#"
+grammar = "gitattributes"

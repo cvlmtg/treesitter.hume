@@ -1,0 +1,4 @@
+[[language]]
+name = "csv"
+file-types = ["csv"]
+scope = "source.csv"

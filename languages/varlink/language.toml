@@ -1,0 +1,8 @@
+[[language]]
+name = "varlink"
+scope = "source.varlink"
+file-types = ["varlink"]
+injection-regex = "varlink"
+indent = { tab-width = 2, unit = "  " }
+comment-token = "#"
+language-servers = ["varlink-language-server"]

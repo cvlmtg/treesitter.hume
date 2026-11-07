@@ -1,0 +1,18 @@
+[[language]]
+name = "janet"
+scope = "source.janet"
+injection-regex = "janet"
+file-types = ["cgen", "janet", "jdn"]
+shebangs = ["janet"]
+roots = ["project.janet"]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }
+formatter = { command = "janet-format" }
+grammar = "janet-simple"
+
+[language.auto-pairs]
+'"' = '"'
+'(' = ')'
+'[' = ']'
+'{' = '}'
+"`" = "`"

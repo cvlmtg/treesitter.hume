@@ -1,0 +1,6 @@
+[[language]]
+name = "xwiki"
+scope = "source.xwiki"
+injection-regex = "xwiki"
+file-types = ["xwiki"]
+indent = { tab-width = 2, unit = "  " }

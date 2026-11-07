@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/bryceberger/tree-sitter-jjrevset"
+rev = "d9af23944b884ec528b505f41d81923bb3136a51"
+subpath = ""
+symbol = "tree_sitter_jjrevset"

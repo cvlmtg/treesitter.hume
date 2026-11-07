@@ -1,0 +1,9 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+context = "8decd73460d26ef0a0befb745d022dd1fc2c38b8"
+
+[grammar]
+url = "https://github.com/alaviss/tree-sitter-nim"
+rev = "c5f0ce3b65222f5dbb1a12f9fe894524881ad590"
+subpath = ""
+symbol = "tree_sitter_nim"

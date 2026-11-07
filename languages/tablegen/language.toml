@@ -1,0 +1,8 @@
+[[language]]
+name = "tablegen"
+scope = "source.tablegen"
+file-types = ["td"]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 2, unit = "  " }
+injection-regex = "tablegen"

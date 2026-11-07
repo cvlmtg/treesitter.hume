@@ -1,0 +1,9 @@
+[[language]]
+name = "smali"
+scope = "source.smali"
+injection-regex = "smali"
+file-types = ["smali"]
+comment-token = "#"
+roots = []
+language-servers = [ "smalisp" ]
+indent = { tab-width = 4, unit = "    " }

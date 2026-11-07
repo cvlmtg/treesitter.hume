@@ -1,0 +1,7 @@
+[[language]]
+name = "batch"
+scope = "source.batch"
+injection-regex = "(cmd|bat(ch)?)"
+file-types = ["bat", "cmd", "btm"]
+indent = { tab-width = 2, unit = "  " }
+comment-tokens = ["REM", "::"]

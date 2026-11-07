@@ -1,0 +1,12 @@
+[[language]]
+name = "vim"
+scope = "source.vim"
+injection-regex = "vim"
+comment-token = '"'
+indent = { tab-width = 4, unit = "\t" }
+file-types = [
+  "vim",
+  { glob = ".vimrc" },
+  { glob = ".nvimrc" },
+  { glob = ".exrc" }
+]

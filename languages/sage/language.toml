@@ -1,0 +1,8 @@
+[[language]]
+name = "sage"
+scope = "source.sage"
+file-types = ["sage"]
+injection-regex = "sage"
+comment-token = "#"
+indent = { tab-width = 4, unit = "    " }
+grammar = "python"

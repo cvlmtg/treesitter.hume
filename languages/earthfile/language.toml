@@ -1,0 +1,11 @@
+[[language]]
+name = "earthfile"
+scope = "source.earthfile"
+injection-regex = "earthfile"
+roots = ["Earthfile"]
+file-types = [
+  { glob = "Earthfile" },
+]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }
+language-servers = ["earthlyls"]

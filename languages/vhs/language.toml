@@ -1,0 +1,7 @@
+[[language]]
+name = "vhs"
+scope = "source.vhs"
+file-types = ["tape"]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }
+grammar = "vhs"

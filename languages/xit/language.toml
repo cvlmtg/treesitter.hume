@@ -1,0 +1,6 @@
+[[language]]
+name = "xit"
+scope = "source.xit"
+injection-regex = "xit"
+file-types = ["xit"]
+indent = { tab-width = 4, unit = "    " }

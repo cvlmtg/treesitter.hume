@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/szebniok/tree-sitter-wgsl"
+rev = "272e89ef2aeac74178edb9db4a83c1ffef80a463"
+subpath = ""
+symbol = "tree_sitter_wgsl"

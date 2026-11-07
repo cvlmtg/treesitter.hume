@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://gitlab.com/MggMuggins/tree-sitter-debian"
+rev = "9b3f4b78c45aab8a2f25a5f9e7bbc00995bc3dde"
+subpath = ""
+symbol = "tree_sitter_debian"

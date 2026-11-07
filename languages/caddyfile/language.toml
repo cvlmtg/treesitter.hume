@@ -1,0 +1,16 @@
+[[language]]
+name = "caddyfile"
+scope = "source.caddyfile"
+injection-regex = "caddyfile"
+file-types = [
+  "Caddyfile",
+  { glob = "Caddyfile" },
+  { glob = "Caddyfile.*" },
+  "caddyfile",
+  { glob = "caddyfile" },
+  { glob = "caddyfile.*" },
+]
+comment-tokens = ["#"]
+indent = { tab-width = 4, unit = "    " }
+formatter = { command = "caddy", args = ["fmt", "-"] }
+auto-format = true

@@ -1,0 +1,6 @@
+[[language]]
+name = "iex"
+scope = "source.iex"
+injection-regex = "iex"
+file-types = ["iex"]
+comment-token = "#"

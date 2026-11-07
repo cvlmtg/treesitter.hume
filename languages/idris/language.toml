@@ -1,0 +1,10 @@
+[[language]]
+name = "idris"
+scope = "source.idr"
+injection-regex = "idr"
+file-types = ["idr"]
+shebangs = []
+comment-token = "--"
+block-comment-tokens = { start = "{-", end = "-}" }
+indent = { tab-width = 2, unit = "  " }
+language-servers = [ "idris2-lsp" ]

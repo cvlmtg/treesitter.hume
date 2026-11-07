@@ -1,0 +1,10 @@
+[[language]]
+name = "godot-resource"
+scope = "source.tscn"
+injection-regex = "godot"
+file-types = ["tscn", "tres", "godot", "gdextension"]
+shebangs = []
+roots = ["project.godot"]
+auto-format = false
+comment-token = ";"
+indent = { tab-width = 4, unit = "\t" }

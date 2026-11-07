@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/amber-lang/tree-sitter-amber"
+rev = "107c6d4a420fb0c5962b62ebd9347b7eb0015957"
+subpath = ""
+symbol = "tree_sitter_amber"

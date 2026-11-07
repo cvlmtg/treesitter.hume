@@ -1,0 +1,7 @@
+[[language]]
+name = "cel"
+scope = "source.cel"
+injection-regex = "cel"
+file-types = ["cel"]
+comment-token = "//"
+indent = { tab-width = 2, unit = "  " }

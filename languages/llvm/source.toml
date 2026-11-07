@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/benwilliamgraham/tree-sitter-llvm"
+rev = "c14cb839003348692158b845db9edda201374548"
+subpath = ""
+symbol = "tree_sitter_llvm"

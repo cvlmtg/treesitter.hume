@@ -1,0 +1,9 @@
+[[language]]
+name = "tlaplus"
+scope = "scope.tlaplus"
+injection-regex = "tla"
+file-types = ["tla"]
+comment-tokens = "\\*"
+block-comment-tokens = {start = "(*", end="*)"}
+indent = {tab-width = 4, unit = " "}
+formatter = {command = "tlafmt", args = ["--stdin"]}

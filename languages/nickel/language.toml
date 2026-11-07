@@ -1,0 +1,15 @@
+[[language]]
+name = "nickel"
+scope = "source.nickel"
+injection-regex = "nickel"
+file-types = ["ncl"]
+shebangs = []
+comment-token = "#"
+language-servers = [ "nls" ]
+indent = { tab-width = 2, unit = "  " }
+
+[language.auto-pairs]
+'(' = ')'
+'{' = '}'
+'[' = ']'
+'"' = '"'

@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/mattsre/tree-sitter-alloy"
+rev = "58d462b1cdb077682b130caa324f3822aeb00b8e"
+subpath = ""
+symbol = "tree_sitter_alloy"

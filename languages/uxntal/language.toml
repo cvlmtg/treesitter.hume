@@ -1,0 +1,12 @@
+[[language]]
+name = "uxntal"
+scope = "source.tal"
+injection-regex = "tal"
+file-types = ["tal"]
+auto-format = false
+block-comment-tokens = { start = "(", end = ")" }
+
+[language.auto-pairs]
+'(' = ')'
+'{' = '}'
+'[' = ']'

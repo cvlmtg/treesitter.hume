@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://codeberg.org/kpbaks/tree-sitter-go-format-string"
+rev = "06587ea641155db638f46a32c959d68796cd36bb"
+subpath = ""
+symbol = "tree_sitter_go_format_string"

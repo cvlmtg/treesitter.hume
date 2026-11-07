@@ -1,0 +1,9 @@
+[[language]]
+name = "pascal"
+scope = "source.pascal"
+injection-regex = "pascal"
+file-types = ["pas", "inc", "lpr", "lfm"]
+comment-token = "//"
+block-comment-tokens = { start = "{", end = "}" }
+indent = { tab-width = 2, unit = "  " }
+language-servers = [ "pasls" ]

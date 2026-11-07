@@ -1,0 +1,7 @@
+[[language]]
+name = "embedded-perl"
+scope = "text.html.ep"
+injection-regex = "embedded-perl"
+file-types = ["ep", { glob = "*.html.ep" }]
+comment-token = "%#"
+indent = { tab-width = 2, unit = "  " }

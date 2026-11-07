@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/bezhermoso/tree-sitter-ghostty"
+rev = "4a0fd2ae492c6bbfd13a134067ee4258f0e0f189"
+subpath = ""
+symbol = "tree_sitter_ghostty"

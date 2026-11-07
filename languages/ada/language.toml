@@ -1,0 +1,9 @@
+[[language]]
+name = "ada"
+scope = "source.ada"
+injection-regex = "ada"
+file-types = ["adb", "ads"]
+roots = ["alire.toml"]
+comment-token = "--"
+indent = { tab-width = 3, unit = "   " }
+language-servers = ["ada-language-server"]

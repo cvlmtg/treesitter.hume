@@ -1,0 +1,8 @@
+[[language]]
+name = "eex"
+scope = "source.eex"
+injection-regex = "eex"
+file-types = ["eex"]
+roots = ["mix.exs", "mix.lock"]
+block-comment-tokens = { start = "<!--", end = "-->" }
+indent = { tab-width = 2, unit = "  " }

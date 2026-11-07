@@ -1,0 +1,11 @@
+[[language]]
+name = "proverif"
+scope = "source.proverif"
+file-types = [ "pv" ]
+injection-regex = "proverif"
+indent = { tab-width = 8, unit="        "}
+block-comment-tokens = { start = "(*", end = "*)" }
+[language.auto-pairs]
+'(' = ')'
+'"' = '"'
+"'" = "'"

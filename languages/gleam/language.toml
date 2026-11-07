@@ -1,0 +1,10 @@
+[[language]]
+name = "gleam"
+scope = "source.gleam"
+injection-regex = "gleam"
+file-types = ["gleam"]
+roots = ["gleam.toml"]
+comment-tokens = ["//", "///", "////"]
+indent = { tab-width = 2, unit = "  " }
+language-servers = [ "gleam" ]
+auto-format = true

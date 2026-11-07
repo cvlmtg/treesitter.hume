@@ -1,0 +1,10 @@
+[[language]]
+name = "rmarkdown"
+scope = "source.rmd"
+language-id = "rmd"
+injection-regex = "(r|R)md"
+file-types = ["rmd", "Rmd"]
+indent = { tab-width = 2, unit = "  " }
+grammar = "markdown"
+block-comment-tokens = { start = "<!--", end = "-->" }
+language-servers = [ "r" ]

@@ -1,0 +1,7 @@
+[[language]]
+name = "doxyfile"
+scope = "source.doxyfile"
+injection-regex = "[Dd]oxyfile"
+file-types = [{ glob = "Doxyfile" }]
+comment-token = "#"
+indent = { tab-width = 4, unit = "    " }

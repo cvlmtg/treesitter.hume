@@ -1,0 +1,8 @@
+[[language]]
+name = "nasm"
+scope = "source.nasm"
+file-types = ["asm", "S", "nasm"]
+injection-regex = "n?asm"
+comment-token = ";"
+indent = { tab-width = 8, unit = "        " }
+language-servers = ["asm-lsp"]

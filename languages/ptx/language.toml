@@ -1,0 +1,9 @@
+[[language]]
+name = "ptx"
+scope = "source.ptx"
+injection-regex = "ptx"
+file-types = ["ptx"]
+language-servers = []
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 4, unit = "    " }

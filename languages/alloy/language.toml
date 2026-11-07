@@ -1,0 +1,8 @@
+[[language]]
+name = "alloy"
+scope = "source.alloy"
+injection-regex = "alloy"
+file-types = ["alloy"]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 2, unit = "  " }

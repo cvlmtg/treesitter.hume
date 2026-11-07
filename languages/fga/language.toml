@@ -1,0 +1,7 @@
+[[language]]
+name = "fga"
+scope = "source.fga"
+injection-regex = "fga"
+file-types = ["fga", { glob = "fga.mod" } ]
+comment-token = "#"
+indent = { tab-width = 2, unit = "  " }

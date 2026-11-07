@@ -1,0 +1,7 @@
+[[language]]
+name = "php-only"
+scope = "source.php-only"
+injection-regex = "php-only"
+file-types = []
+indent = { tab-width = 4, unit = "    " }
+roots = ["composer.json", "index.php"]

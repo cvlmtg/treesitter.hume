@@ -1,0 +1,9 @@
+[[language]]
+name = "powershell"
+scope = "source.powershell"
+injection-regex = "(pwsh|powershell)"
+file-types = [ "ps1", "psm1", "psd1", "pscc", "psrc" ]
+shebangs = [ "pwsh", "powershell" ]
+comment-token = '#'
+block-comment-tokens = { start = "<#", end = "#>" }
+indent = { tab-width = 4, unit = "    " }

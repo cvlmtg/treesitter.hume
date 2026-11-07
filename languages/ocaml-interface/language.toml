@@ -1,0 +1,15 @@
+[[language]]
+name = "ocaml-interface"
+scope = "source.ocaml.interface"
+file-types = ["mli"]
+shebangs = []
+block-comment-tokens = { start = "(*", end = "*)" }
+comment-token = "(**)"
+language-servers = [ "ocamllsp" ]
+indent = { tab-width = 2, unit = "  " }
+
+[language.auto-pairs]
+'(' = ')'
+'{' = '}'
+'[' = ']'
+'"' = '"'

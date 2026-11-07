@@ -1,0 +1,8 @@
+[upstream]
+helix = "ba40e547426b0f9896c8bdc699a4ab11f2b37dbc"
+
+[grammar]
+url = "https://github.com/ath3/tree-sitter-passwd"
+rev = "20239395eacdc2e0923a7e5683ad3605aee7b716"
+subpath = ""
+symbol = "tree_sitter_passwd"
