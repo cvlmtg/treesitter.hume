@@ -11,6 +11,10 @@ fn pin(subpath: &str) -> Pin {
         rev: REV.to_string(),
         subpath: subpath.to_string(),
         symbol: "tree_sitter_probe".to_string(),
+        upstream: Upstream {
+            helix: REV.to_string(),
+            context: None,
+        },
     }
 }
 
@@ -134,16 +138,42 @@ fn license_files_are_named_for_a_license_copying_or_notice() {
     }
 }
 
+const CONTEXT_REV: &str = "fedcba9876543210fedcba9876543210fedcba98";
+
 #[test]
-fn the_queries_notice_names_helix_its_commit_and_the_mpl() {
-    let notice = queries_notice("probe", "https://github.com/helix-editor/helix", REV);
+fn the_queries_notice_names_helix_its_commit_the_mpl_and_the_shipped_source() {
+    let upstream = Upstream {
+        helix: REV.to_string(),
+        context: None,
+    };
+    let notice = queries_notice("probe", &upstream, "v9.9.9");
 
     for part in [
-        "runtime/queries/probe/",
         "https://github.com/helix-editor/helix",
         REV,
         "Mozilla Public License 2.0",
         "https://mozilla.org/MPL/2.0/",
+        "https://github.com/cvlmtg/treesitter.hume",
+        "v9.9.9",
+        "languages/probe/",
+    ] {
+        assert!(notice.contains(part), "{part} in {notice}");
+    }
+    assert!(!notice.contains("nvim-treesitter-context"), "{notice}");
+}
+
+#[test]
+fn the_queries_notice_carries_the_context_queries_license() {
+    let upstream = Upstream {
+        helix: REV.to_string(),
+        context: Some(CONTEXT_REV.to_string()),
+    };
+    let notice = queries_notice("probe", &upstream, "v9.9.9");
+
+    for part in [
+        "https://github.com/nvim-treesitter/nvim-treesitter-context",
+        CONTEXT_REV,
+        "Permission is hereby granted",
     ] {
         assert!(notice.contains(part), "{part} in {notice}");
     }

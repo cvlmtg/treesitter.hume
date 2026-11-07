@@ -43,30 +43,15 @@ impl Git {
     }
 
     /// Check out commit `rev` of `url` into the empty or missing directory
-    /// `dest`, with no history. With `sparse`, only that directory (and the
-    /// files at the root) is checked out, and only its file contents are
-    /// downloaded.
-    pub(crate) fn checkout(
-        &self,
-        url: &str,
-        rev: &str,
-        dest: &Path,
-        sparse: Option<&str>,
-    ) -> Result<(), GitError> {
+    /// `dest`, with no history.
+    pub(crate) fn checkout(&self, url: &str, rev: &str, dest: &Path) -> Result<(), GitError> {
         std::fs::create_dir_all(dest).map_err(|e| GitError {
             command: format!("creating {}", dest.display()),
             output: e.to_string(),
         })?;
         run(dest, &["init", "-q"])?;
-        let mut fetch = vec!["fetch", "-q", "--depth", "1"];
-        if let Some(dir) = sparse {
-            run(dest, &["sparse-checkout", "set", dir])?;
-            fetch.push("--filter=blob:none");
-        }
-        fetch.extend(["--", url, rev]);
-        self.retrying(|| run(dest, &fetch))?;
-        // With a blob filter, the checkout downloads the file contents.
-        self.retrying(|| run(dest, &["checkout", "-q", "--detach", "FETCH_HEAD"]))
+        self.retrying(|| run(dest, &["fetch", "-q", "--depth", "1", "--", url, rev]))?;
+        run(dest, &["checkout", "-q", "--detach", "FETCH_HEAD"])
     }
 
     fn retrying(&self, mut attempt: impl FnMut() -> Result<(), GitError>) -> Result<(), GitError> {

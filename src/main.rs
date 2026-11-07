@@ -8,9 +8,9 @@ mod bundle;
 mod compile;
 mod git;
 mod invocation;
+mod languages;
 mod licenses;
 mod manifest;
-mod pins;
 mod pipeline;
 mod platform;
 mod probe;
@@ -27,7 +27,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use git::Git;
-use pins::{Pin, Pins};
+use languages::{Languages, Pin};
 use pipeline::Request;
 
 const USAGE: &str = "\
@@ -158,14 +158,13 @@ fn run(command: Command) -> Result<ExitCode, String> {
             .map(|()| ExitCode::SUCCESS)
             .map_err(|e| e.to_string()),
         Command::Build { out, selection } => {
-            let pins = Pins::embedded().map_err(|e| e.to_string())?;
+            let catalog = Languages::embedded().map_err(|e| e.to_string())?;
             let platform = platform::current();
-            let languages = selected(&pins, &selection, &platform)?;
+            let languages = selected(&catalog, &selection, &platform)?;
             let report = pipeline::build(
                 &Request {
                     languages,
-                    helix_url: pipeline::HELIX_URL,
-                    helix_rev: pins.helix_rev(),
+                    queries: &catalog,
                     out: &out,
                     tag: TAG,
                     platform: &platform,
@@ -195,7 +194,7 @@ fn run(command: Command) -> Result<ExitCode, String> {
 /// The pins `selection` names, each once and in name order. Every named
 /// language must be pinned.
 fn selected<'a>(
-    pins: &'a Pins,
+    pins: &'a Languages,
     selection: &Selection,
     platform: &str,
 ) -> Result<Vec<&'a Pin>, String> {

@@ -14,7 +14,7 @@ pub(crate) struct Manifest<'a> {
     pub(crate) platform: &'a str,
     /// The release tag of the tool that built the archive.
     pub(crate) tag: &'a str,
-    /// The Helix commit the queries come from.
+    /// The Helix commit every query file but `context.scm` comes from.
     pub(crate) helix_rev: &'a str,
 }
 

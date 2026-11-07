@@ -29,8 +29,7 @@ pub(crate) fn git(dir: &Path, args: &[&str]) -> String {
         .to_string()
 }
 
-/// A new repository that serves any commit by SHA, with a blob filter, as
-/// GitHub does.
+/// A new repository that serves any commit by SHA, as GitHub does.
 pub(crate) fn serving_repo() -> tempfile::TempDir {
     let dir = tempfile::tempdir().expect("repo dir");
     git(dir.path(), &["init", "-q"]);
@@ -38,7 +37,6 @@ pub(crate) fn serving_repo() -> tempfile::TempDir {
         dir.path(),
         &["config", "uploadpack.allowAnySHA1InWant", "true"],
     );
-    git(dir.path(), &["config", "uploadpack.allowFilter", "true"]);
     dir
 }
 

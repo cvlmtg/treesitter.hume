@@ -1,6 +1,7 @@
 //! The notices a language archive carries for what it redistributes: its
 //! grammar's license files with a note on where the grammar's source is,
-//! and the MPL-2.0 notice of Helix's query files.
+//! and the notice of its query files: where they come from and their
+//! licenses.
 
 use std::fmt;
 use std::fs;
@@ -10,7 +11,12 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
-use crate::pins::Pin;
+use crate::languages::{Pin, Upstream};
+
+const HELIX_URL: &str = "https://github.com/helix-editor/helix";
+const CONTEXT_URL: &str = "https://github.com/nvim-treesitter/nvim-treesitter-context";
+const REPO_URL: &str = "https://github.com/cvlmtg/treesitter.hume";
+const CONTEXT_LICENSE: &str = include_str!("../notices/nvim-treesitter-context.LICENSE");
 
 static LICENSE_NAME: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?i)^(LICEN[CS]E|COPYING|NOTICE|UNLICENSE)([.-].*)?$")
@@ -113,18 +119,36 @@ fn source_note(pin: &Pin) -> String {
     )
 }
 
-/// The text of `queries/NOTICE` for `language`'s queries, taken from Helix
-/// at `helix_url` and `helix_rev`.
-pub(crate) fn queries_notice(language: &str, helix_url: &str, helix_rev: &str) -> String {
-    format!(
-        "These query files are Helix's runtime/queries/{language}/ files, from\n\
-         {helix_url} at commit {helix_rev}.\n\
-         Each `; inherits:` line is replaced by the queries of the languages it\n\
-         names.\n\
+/// The text of `queries/NOTICE` for `language`'s queries, which this
+/// repo's `tag` ships with the changes it makes to them.
+pub(crate) fn queries_notice(language: &str, upstream: &Upstream, tag: &str) -> String {
+    let helix = &upstream.helix;
+    let origin = match &upstream.context {
+        Some(context) => format!(
+            "context.scm comes from nvim-treesitter-context, {CONTEXT_URL},\n\
+             at commit {context}. The other query files come from Helix's\n\
+             runtime/queries, {HELIX_URL}, at commit {helix}.\n"
+        ),
+        None => format!(
+            "These query files come from Helix's runtime/queries,\n\
+             {HELIX_URL}, at commit {helix}.\n"
+        ),
+    };
+    let mut notice = format!(
+        "{origin}\
+         treesitter.hume may change them. The files as shipped are in\n\
+         {REPO_URL} at tag {tag}, in languages/{language}/ and\n\
+         the folders their `; inherits:` lines name. Each `; inherits:` line is\n\
+         replaced by the queries of the languages it names.\n\
          \n\
-         They are covered by the Mozilla Public License 2.0, which you can get\n\
-         at https://mozilla.org/MPL/2.0/. Their source is at the commit above.\n"
-    )
+         The files from Helix are covered by the Mozilla Public License 2.0,\n\
+         which you can get at https://mozilla.org/MPL/2.0/.\n"
+    );
+    if upstream.context.is_some() {
+        notice.push_str("\ncontext.scm is covered by this license:\n\n");
+        notice.push_str(CONTEXT_LICENSE);
+    }
+    notice
 }
 
 #[cfg(test)]

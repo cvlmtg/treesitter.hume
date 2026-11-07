@@ -79,7 +79,7 @@ fn version_and_unknown_commands() {
 
 #[test]
 fn a_named_language_must_be_pinned() {
-    let pins = Pins::embedded().expect("pins");
+    let pins = Languages::embedded().expect("languages");
     let err = selected(
         &pins,
         &languages(&["rust", "cobol", "klingon"]),
@@ -91,7 +91,7 @@ fn a_named_language_must_be_pinned() {
 
 #[test]
 fn a_language_named_twice_is_built_once() {
-    let pins = Pins::embedded().expect("pins");
+    let pins = Languages::embedded().expect("languages");
     let chosen =
         selected(&pins, &languages(&["rust", "c", "rust"]), "linux-x86_64").expect("pinned names");
     let names: Vec<&str> = chosen.iter().map(|pin| pin.name.as_str()).collect();

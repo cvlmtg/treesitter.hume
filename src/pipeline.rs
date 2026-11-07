@@ -1,7 +1,6 @@
 //! `build`: from pins to one archive per language.
 //!
-//! Helix's queries are checked out once. Each distinct grammar repository
-//! is a unit of work, run in parallel with the others: one fetch, one
+//! Each distinct grammar repository is a unit of work, run in parallel with the others: one fetch, one
 //! compile per subpath, then a probe, resolved queries, a manifest and
 //! license notices for each language that uses it, packed into that
 //! language's archive. The checkout is removed when its unit ends, so disk
@@ -18,20 +17,18 @@ use std::thread;
 
 use crate::bundle;
 use crate::compile;
-use crate::git::{Git, GitError};
+use crate::git::Git;
+use crate::languages::{Languages, Pin};
 use crate::licenses;
 use crate::manifest::Manifest;
-use crate::pins::Pin;
 use crate::probe;
 use crate::queries::{self, QueryError};
-
-pub(crate) const HELIX_URL: &str = "https://github.com/helix-editor/helix";
 
 /// What to build, and where.
 pub(crate) struct Request<'a> {
     pub(crate) languages: Vec<&'a Pin>,
-    pub(crate) helix_url: &'a str,
-    pub(crate) helix_rev: &'a str,
+    /// Every folder's query files, inherited ones included.
+    pub(crate) queries: &'a Languages<'a>,
     /// Receives each language's archive, beside any it already holds.
     pub(crate) out: &'a Path,
     pub(crate) tag: &'a str,
@@ -49,22 +46,12 @@ pub(crate) struct Report {
 /// Why nothing was built.
 #[derive(Debug)]
 pub(crate) enum BuildError {
-    Helix(GitError),
-    NoHighlights(Vec<String>),
     Io { path: PathBuf, source: io::Error },
 }
 
 impl fmt::Display for BuildError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Helix(e) => write!(f, "Helix queries: {e}"),
-            Self::NoHighlights(languages) => {
-                write!(
-                    f,
-                    "Helix has no highlights.scm for: {}",
-                    languages.join(", ")
-                )
-            }
             Self::Io { path, source } => write!(f, "{}: {source}", path.display()),
         }
     }
@@ -93,7 +80,6 @@ struct Outcome {
 struct Context<'a> {
     git: &'a Git,
     work: &'a Path,
-    queries: PathBuf,
     request: &'a Request<'a>,
 }
 
@@ -106,29 +92,9 @@ pub(crate) fn build(request: &Request, git: &Git) -> Result<Report, BuildError> 
         .prefix("hume-grammar-build")
         .tempdir()
         .map_err(io_error(&std::env::temp_dir()))?;
-    let helix = work.path().join("helix");
-    git.checkout(
-        request.helix_url,
-        request.helix_rev,
-        &helix,
-        Some("runtime/queries"),
-    )
-    .map_err(BuildError::Helix)?;
-    let queries = helix.join("runtime").join("queries");
-    let no_highlights: Vec<String> = request
-        .languages
-        .iter()
-        .filter(|pin| !queries.join(&pin.name).join("highlights.scm").is_file())
-        .map(|pin| pin.name.clone())
-        .collect();
-    if !no_highlights.is_empty() {
-        return Err(BuildError::NoHighlights(no_highlights));
-    }
-
     let context = Context {
         git,
         work: work.path(),
-        queries,
         request,
     };
     let mut report = Report {
@@ -218,7 +184,7 @@ fn build_repo(id: usize, repo: &Repo, context: &Context) -> Vec<Outcome> {
     let source = context.work.join(format!("repo-{id}"));
     let fetched = context
         .git
-        .checkout(repo.url, repo.rev, &source, None)
+        .checkout(repo.url, repo.rev, &source)
         .map_err(|e| e.to_string());
     let mut libraries: BTreeMap<&str, Result<PathBuf, String>> = BTreeMap::new();
     let outcomes = repo
@@ -282,7 +248,7 @@ fn package(
         abi,
         platform: request.platform,
         tag: request.tag,
-        helix_rev: request.helix_rev,
+        helix_rev: &pin.upstream.helix,
     };
     let library_bytes = fs::read(library).map_err(|e| format!("{}: {e}", library.display()))?;
     let mut files = vec![
@@ -298,13 +264,11 @@ fn package(
     files.extend(licenses);
     files.push((
         "queries/NOTICE".to_string(),
-        licenses::queries_notice(&pin.name, request.helix_url, request.helix_rev).into_bytes(),
+        licenses::queries_notice(&pin.name, &pin.upstream, request.tag).into_bytes(),
     ));
-    let dir = context.queries.join(&pin.name);
-    let names = queries::query_files(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-    for file in names {
+    for file in request.queries.query_files(&pin.name) {
         let resolved = queries::resolve(&pin.name, |language| {
-            fs::read_to_string(context.queries.join(language).join(&file)).ok()
+            request.queries.query(language, file).map(str::to_string)
         })
         .map_err(|e: QueryError| format!("{file}: {e}"))?;
         for parent in resolved.missing {

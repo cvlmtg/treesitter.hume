@@ -1,5 +1,3 @@
-use std::fs;
-
 use super::*;
 
 /// A reader over `(language, text)` pairs, all for one query file.
@@ -109,17 +107,4 @@ fn a_cycle_is_an_error_naming_its_chain() {
 fn a_language_whose_file_is_missing_is_an_error() {
     let err = resolve("x", reader(&[])).expect_err("no file for x");
     assert_eq!(err.to_string(), "no query file for x");
-}
-
-#[test]
-fn query_files_lists_the_scm_files_in_name_order() {
-    let dir = tempfile::tempdir().expect("dir");
-    for name in ["textobjects.scm", "highlights.scm", "README.md"] {
-        fs::write(dir.path().join(name), "").expect("file");
-    }
-    fs::create_dir(dir.path().join("nested.scm")).expect("dir");
-    assert_eq!(
-        query_files(dir.path()).expect("list"),
-        ["highlights.scm", "textobjects.scm"]
-    );
 }

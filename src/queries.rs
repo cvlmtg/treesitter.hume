@@ -4,8 +4,6 @@
 //! themselves resolved, each framed by newlines.
 
 use std::fmt;
-use std::io;
-use std::path::Path;
 use std::sync::LazyLock;
 
 use regex::{Captures, Regex};
@@ -101,22 +99,6 @@ fn parent_text(
     let expanded = expand(&text, read, chain, missing);
     chain.pop();
     expanded
-}
-
-/// The names of the query files in `dir`, in name order.
-pub(crate) fn query_files(dir: &Path) -> io::Result<Vec<String>> {
-    let mut names = Vec::new();
-    for entry in std::fs::read_dir(dir)? {
-        let entry = entry?;
-        if entry.file_type()?.is_file()
-            && let Some(name) = entry.file_name().to_str()
-            && name.ends_with(".scm")
-        {
-            names.push(name.to_string());
-        }
-    }
-    names.sort();
-    Ok(names)
 }
 
 #[cfg(test)]

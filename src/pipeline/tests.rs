@@ -3,7 +3,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use super::*;
-use crate::pins::Pins;
+use crate::languages::{Folder, Languages};
 use crate::test_support::{file_url, git, serving_repo};
 
 /// Commit `files` into a new repository. Returns the repository and its
@@ -47,44 +47,70 @@ fn grammar_repo(extra: &[(&str, &[u8])]) -> (tempfile::TempDir, String) {
     repo(&files)
 }
 
-/// A Helix tree whose `probe` highlights inherit `base`'s.
-fn helix_repo() -> (tempfile::TempDir, String) {
-    repo(&[
-        (
-            "runtime/queries/probe/highlights.scm",
-            b"; inherits: base\n(word) @variable\n",
-        ),
-        (
-            "runtime/queries/probe/textobjects.scm",
-            b"(word) @word.inside\n",
-        ),
-        ("runtime/queries/twin/highlights.scm", b"(word) @string\n"),
-        ("runtime/queries/broken/highlights.scm", b"(word) @string\n"),
-        ("runtime/queries/base/highlights.scm", b"(source) @base\n"),
-        ("languages.toml", b""),
-    ])
+const HELIX_REV: &str = "0123456789abcdef0123456789abcdef01234567";
+const CONTEXT_REV: &str = "fedcba9876543210fedcba9876543210fedcba98";
+
+/// `probe`'s queries: highlights that inherit `base`'s, and context
+/// queries.
+const PROBE_QUERIES: &[(&str, &str)] = &[
+    ("context.scm", "(source) @context\n"),
+    ("highlights.scm", "; inherits: base\n(word) @variable\n"),
+    ("textobjects.scm", "(word) @word.inside\n"),
+];
+const STRING_QUERIES: &[(&str, &str)] = &[("highlights.scm", "(word) @string\n")];
+const BASE_QUERIES: &[(&str, &str)] = &[("highlights.scm", "(source) @base\n")];
+const BASE_SOURCE: &str = "[upstream]\nhelix = \"0123456789abcdef0123456789abcdef01234567\"\n";
+
+/// The `source.toml` of a language pinned to `url` at `rev`, with context
+/// queries when `context` is set.
+fn source(url: &str, rev: &str, context: bool) -> String {
+    let context = if context {
+        format!("context = \"{CONTEXT_REV}\"\n")
+    } else {
+        String::new()
+    };
+    format!(
+        "[upstream]\nhelix = \"{HELIX_REV}\"\n{context}\n[grammar]\nurl = \"{url}\"\nrev = \"{rev}\"\nsubpath = \"\"\nsymbol = \"tree_sitter_probe\"\n"
+    )
 }
 
-fn pins(helix_rev: &str, languages: &[(&str, &str, &str)]) -> Pins {
-    let mut toml = format!("helix-rev = \"{helix_rev}\"\n");
-    for (name, url, rev) in languages {
-        toml.push_str(&format!(
-            "[[language]]\nname = \"{name}\"\nurl = \"{url}\"\nrev = \"{rev}\"\nsubpath = \"\"\nsymbol = \"tree_sitter_probe\"\n"
-        ));
-    }
-    Pins::parse(&toml, "").expect("pins")
-}
-
-fn run(pins: &Pins, helix: &Path, out: &Path) -> Result<Report, BuildError> {
-    let languages = ["probe", "twin", "broken"]
+/// The `source.toml` of every language in `pinned`, as `(name, url, rev)`.
+fn sources(pinned: &[(&str, &str, &str)]) -> Vec<(String, String)> {
+    pinned
         .iter()
-        .filter_map(|name| pins.get(name))
+        .map(|(name, url, rev)| (name.to_string(), source(url, rev, *name == "probe")))
+        .collect()
+}
+
+/// The pinned languages `sources` describes, and the query-only `base`
+/// folder.
+fn languages(sources: &[(String, String)]) -> Languages<'_> {
+    let mut folders = vec![Folder {
+        name: "base",
+        source: BASE_SOURCE,
+        queries: BASE_QUERIES,
+    }];
+    folders.extend(sources.iter().map(|(name, source)| Folder {
+        name,
+        source,
+        queries: if name == "probe" {
+            PROBE_QUERIES
+        } else {
+            STRING_QUERIES
+        },
+    }));
+    Languages::parse(folders, "").expect("languages")
+}
+
+fn run(languages: &Languages, out: &Path) -> Result<Report, BuildError> {
+    let pins = ["probe", "twin", "broken"]
+        .iter()
+        .filter_map(|name| languages.get(name))
         .collect();
     build(
         &Request {
-            languages,
-            helix_url: &file_url(helix),
-            helix_rev: pins.helix_rev(),
+            languages: pins,
+            queries: languages,
             out,
             tag: "v9.9.9",
             platform: "test-arch",
@@ -140,16 +166,13 @@ fn text(files: &[(String, Vec<u8>)], path: &str) -> String {
 #[test]
 fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
     let (grammar, grammar_rev) = grammar_repo(&[("LICENSE", b"MIT terms\n")]);
-    let (helix, helix_rev) = helix_repo();
     let url = file_url(grammar.path());
-    let pins = pins(
-        &helix_rev,
-        &[("probe", &url, &grammar_rev), ("twin", &url, &grammar_rev)],
-    );
+    let sources = sources(&[("probe", &url, &grammar_rev), ("twin", &url, &grammar_rev)]);
+    let languages = languages(&sources);
     let out = tempfile::tempdir().expect("out");
     fs::write(out.path().join("c.tar.gz"), b"an earlier build").expect("earlier archive");
 
-    let report = run(&pins, helix.path(), out.path()).expect("build");
+    let report = run(&languages, out.path()).expect("build");
 
     assert_eq!(report.built, ["probe", "twin"]);
     assert!(report.failed.is_empty(), "{:?}", report.failed);
@@ -164,17 +187,21 @@ fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
             "manifest.scm",
             library.as_str(),
             "queries/NOTICE",
+            "queries/context.scm",
             "queries/highlights.scm",
             "queries/textobjects.scm",
         ]
     );
     assert_eq!(text(&probe, "licenses/LICENSE"), "MIT terms\n");
     assert!(text(&probe, "licenses/SOURCE").contains(&grammar_rev));
-    assert!(text(&probe, "queries/NOTICE").contains(&helix_rev));
+    let notice = text(&probe, "queries/NOTICE");
+    assert!(notice.contains(HELIX_REV), "{notice}");
+    assert!(notice.contains(CONTEXT_REV), "{notice}");
     assert_eq!(
         text(&probe, "queries/highlights.scm"),
         "\n(source) @base\n\n(word) @variable\n"
     );
+    assert_eq!(text(&probe, "queries/context.scm"), "(source) @context\n");
     let manifest = text(&probe, "manifest.scm");
     for field in [
         "(name . \"probe\")",
@@ -182,17 +209,13 @@ fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
         "(abi . 15)",
         "(platform . \"test-arch\")",
         "(tag . \"v9.9.9\")",
-        &format!("(helix-rev . \"{helix_rev}\")"),
+        &format!("(helix-rev . \"{HELIX_REV}\")"),
     ] {
         assert!(manifest.contains(field), "{field} in {manifest}");
     }
-    assert_eq!(
-        text(
-            &files(&member(out.path(), "twin")),
-            "queries/highlights.scm"
-        ),
-        "(word) @string\n"
-    );
+    let twin = files(&member(out.path(), "twin"));
+    assert_eq!(text(&twin, "queries/highlights.scm"), "(word) @string\n");
+    assert!(!text(&twin, "queries/NOTICE").contains(CONTEXT_REV));
     assert_eq!(
         listing(out.path()),
         ["c.tar.gz", "probe.tar.gz", "twin.tar.gz"]
@@ -203,17 +226,19 @@ fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
 #[test]
 fn a_language_that_fails_leaves_the_others_built() {
     let (grammar, grammar_rev) = grammar_repo(&[("LICENSE", b"MIT terms\n")]);
-    let (helix, helix_rev) = helix_repo();
-    let pins = pins(
-        &helix_rev,
-        &[
-            ("probe", &file_url(grammar.path()), &grammar_rev),
-            ("broken", &file_url(helix.path()), &helix_rev),
-        ],
-    );
+    let (not_a_grammar, not_a_grammar_rev) = repo(&[("README", b"no parser here\n")]);
+    let sources = sources(&[
+        ("probe", &file_url(grammar.path()), &grammar_rev),
+        (
+            "broken",
+            &file_url(not_a_grammar.path()),
+            &not_a_grammar_rev,
+        ),
+    ]);
+    let languages = languages(&sources);
     let out = tempfile::tempdir().expect("out");
 
-    let report = run(&pins, helix.path(), out.path()).expect("build");
+    let report = run(&languages, out.path()).expect("build");
 
     assert_eq!(report.built, ["probe"]);
     let failed: Vec<&str> = report
@@ -234,17 +259,14 @@ fn a_language_that_fails_leaves_the_others_built() {
 fn a_grammar_without_a_license_file_fails_and_leaves_the_others_built() {
     let (licensed, licensed_rev) = grammar_repo(&[("LICENSE", b"MIT terms\n")]);
     let (unlicensed, unlicensed_rev) = grammar_repo(&[]);
-    let (helix, helix_rev) = helix_repo();
-    let pins = pins(
-        &helix_rev,
-        &[
-            ("probe", &file_url(licensed.path()), &licensed_rev),
-            ("twin", &file_url(unlicensed.path()), &unlicensed_rev),
-        ],
-    );
+    let sources = sources(&[
+        ("probe", &file_url(licensed.path()), &licensed_rev),
+        ("twin", &file_url(unlicensed.path()), &unlicensed_rev),
+    ]);
+    let languages = languages(&sources);
     let out = tempfile::tempdir().expect("out");
 
-    let report = run(&pins, helix.path(), out.path()).expect("build");
+    let report = run(&languages, out.path()).expect("build");
 
     assert_eq!(report.built, ["probe"]);
     assert_eq!(
@@ -254,37 +276,4 @@ fn a_grammar_without_a_license_file_fails_and_leaves_the_others_built() {
             format!("no license file in the repository root at {unlicensed_rev}")
         )]
     );
-}
-
-#[test]
-fn a_language_without_helix_highlights_stops_the_build_before_any_fetch() {
-    let (helix, helix_rev) = helix_repo();
-    let pins = pins(
-        &helix_rev,
-        &[
-            ("missing", "file:///nonexistent", &helix_rev),
-            ("probe", "file:///nonexistent", &helix_rev),
-        ],
-    );
-    let out = tempfile::tempdir().expect("out");
-    let languages = vec![
-        pins.get("missing").expect("pinned"),
-        pins.get("probe").expect("pinned"),
-    ];
-
-    let err = build(
-        &Request {
-            languages,
-            helix_url: &file_url(helix.path()),
-            helix_rev: pins.helix_rev(),
-            out: out.path(),
-            tag: "v9.9.9",
-            platform: "test-arch",
-        },
-        &Git::without_retries(),
-    )
-    .expect_err("no highlights for missing");
-
-    assert_eq!(err.to_string(), "Helix has no highlights.scm for: missing");
-    assert_eq!(fs::read_dir(out.path()).expect("out").count(), 0);
 }
