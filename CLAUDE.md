@@ -1,10 +1,13 @@
 # treesitter.hume — Project Instructions
 
 ## What is this?
-Prebuilt tree-sitter grammars for HUME. The repo owns the grammar pins, the
-Helix query pin, and `hume-grammar-build`, the tool that turns a pinned
-grammar into the archive HUME installs. CI runs the same tool on each release
-platform; a user on any other platform runs it locally.
+Prebuilt tree-sitter grammars for HUME. The repo owns `languages/`, its own
+copy of the grammar pins, query files and language settings taken from Helix
+and nvim-treesitter-context, with its changes on top; and
+`hume-grammar-build`, the tool that turns a pinned grammar into the archive
+HUME installs. CI runs the same tool on each release platform; a user on any
+other platform runs it locally. The `upstream` branch holds the unchanged
+upstream snapshots `main` merges.
 
 ## Rules
 - **Comments** follow the global ⛔ Comments rules.

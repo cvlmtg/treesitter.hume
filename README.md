@@ -8,9 +8,13 @@ macOS (Apple silicon) and Windows (x86_64), with the syntax queries HUME uses
 alongside. On any other platform, the same tool builds the same grammars on
 your machine.
 
-Which grammars a release holds, the commit each one is built from, and the
-queries all come from [Helix](https://helix-editor.com), at one pinned Helix
-commit.
+Which grammars a release holds, the commit each one is built from, their
+queries and the language settings HUME starts from come from
+[Helix](https://helix-editor.com). The context queries, which name the
+scopes around a position, come from
+[nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context).
+This repository keeps its own copy of both, with its own changes, and takes
+in upstream changes through reviewed snapshots.
 
 ## What a release holds
 
@@ -24,16 +28,18 @@ commit.
 Each `<language>.tar.gz` holds:
 
 - the compiled grammar, `<language>.so`, `.dylib` or `.dll`;
-- `queries/`, the language's query files from [Helix](https://helix-editor.com),
-  with `; inherits:` already resolved;
+- `queries/`, the language's query files with `; inherits:` already
+  resolved: `context.scm` from nvim-treesitter-context, when there is one,
+  and the others from Helix. Each compiles against the grammar beside it;
 - `manifest.scm`, which names the language, its grammar's source and commit,
   the C symbol to load, the tree-sitter ABI, the platform, the release tag and
-  the Helix commit the queries come from;
+  the Helix commit the language's queries come from;
 - `licenses/`, the grammar's license files, and `licenses/SOURCE`, which says
   where the grammar's source code is;
-- `queries/NOTICE`: the query files are under the
+- `queries/NOTICE`, which says where the query files come from and their
+  licenses: the files from Helix are under the
   [Mozilla Public License 2.0](https://mozilla.org/MPL/2.0/), like the rest of
-  Helix.
+  Helix, and `context.scm` under nvim-treesitter-context's MIT license.
 
 A grammar whose repository has no license file is left out of the release,
 since nothing grants the right to redistribute it.
@@ -85,11 +91,27 @@ hume-grammar-build compile path/to/tree-sitter-mylang mylang.so
 
 ## Maintaining
 
-- `grammars.toml` pins every grammar and the Helix commit the queries come
-  from. It is generated: `scripts/sync-pins.py --helix <commit>` moves to
-  another Helix commit.
+- `languages/<name>/` holds one language: `source.toml`, which names the
+  upstream commits its files come from and, for a language with a grammar,
+  the grammar's repository, commit, subpath and C symbol; its query files;
+  and `language.toml`, Helix's settings for the language.
+  `language-servers.toml` holds Helix's language-server settings. HUME
+  generates its language data from these two files at the tag it pins.
 - `exclusions.toml` lists languages a release leaves out, each with its
   reason and, optionally, the platforms it applies to.
+- The `upstream` branch holds Helix and nvim-treesitter-context as
+  `scripts/import-upstream.py` writes them, and `main` merges it. Each
+  month the upstream workflow imports both upstreams' default branches
+  into `upstream`, opens a pull request into `main` listing the commits
+  behind each changed language, and builds `main` with the snapshot
+  merged. Merge that pull request with a merge commit, never a squash or a
+  rebase, so the next snapshot merges from this one. To keep an upstream
+  change out, undo it in a commit on `main` after the merge. The workflow
+  needs the repository setting that lets GitHub Actions create pull
+  requests.
+- To change a query or a setting, edit it on `main`. Every build compiles
+  each query file against its grammar, and fails the language when one
+  does not compile.
 - To release: set the new version in `Cargo.toml`, commit, tag the commit
   `v<version>` and push the tag. The release workflow builds every
   platform, packs each platform's archives into its bundle with
@@ -100,7 +122,9 @@ hume-grammar-build compile path/to/tree-sitter-mylang mylang.so
 ## Credits
 
 - [Helix](https://helix-editor.com): the list of grammars, the commit each
-  one is built from, and the query files.
+  one is built from, the query files and the language settings.
+- [nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context):
+  the context queries.
 - The authors of each grammar: an archive's `licenses/` holds its grammar's
   license, and `licenses/SOURCE` links the grammar's repository.
 
@@ -108,6 +132,13 @@ hume-grammar-build compile path/to/tree-sitter-mylang mylang.so
 
 The tool and the rest of this repository are MIT. See `LICENSE`.
 
-The grammar archives are not covered by it: each grammar keeps its own
-license, and the query files are under the MPL-2.0, as each archive's
-`licenses/` and `queries/NOTICE` state.
+It does not cover what comes from elsewhere:
+
+- each grammar keeps its own license, which its archive's `licenses/`
+  holds;
+- what comes from Helix, the query files, each `language.toml` and
+  `language-servers.toml`, is under the MPL-2.0;
+- the context queries are under nvim-treesitter-context's MIT license, in
+  `notices/`.
+
+Each archive's `queries/NOTICE` says which applies to its queries.

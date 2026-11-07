@@ -34,7 +34,7 @@ pub(crate) struct Folder<'a> {
 
 /// The upstream commits a folder's files come from: Helix for every file
 /// but `context.scm`, nvim-treesitter-context for `context.scm`. `context`
-/// is set exactly when the folder has a `context.scm`.
+/// is set if and only if the folder has a `context.scm`.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Upstream {
