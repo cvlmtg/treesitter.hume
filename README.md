@@ -3,10 +3,10 @@
 Prebuilt [tree-sitter](https://tree-sitter.github.io/) grammars for
 [HUME](https://github.com/cvlmtg/hume), and the tool that builds them.
 
-Each release holds every grammar HUME knows, built for Linux (x86_64),
-macOS (Apple silicon) and Windows (x86_64), with the syntax queries HUME uses
-alongside. On any other platform, the same tool builds the same grammars on
-your machine.
+Each release holds every grammar HUME knows, built for Linux (x86_64 and
+arm64), macOS (Apple silicon) and Windows (x86_64), with the syntax queries
+HUME uses alongside. On any other platform, the same tool builds the same
+grammars on your machine.
 
 Which grammars a release holds, the commit each one is built from, their
 queries and the language settings HUME starts from come from

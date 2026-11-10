@@ -32,6 +32,10 @@ jobs:
             # Oldest glibc the tool and the grammars run on. Zig links
             # against this version's symbols instead of the runner's.
             glibc: '2.28'
+          - os: ubuntu-24.04-arm
+            platform: linux-aarch64
+            target: aarch64-unknown-linux-gnu
+            glibc: '2.28'
           - os: macos-latest
             platform: macos-aarch64
             target: aarch64-apple-darwin
@@ -89,8 +93,10 @@ jobs:
       - name: Compile grammars with zig
         if: matrix.glibc
         run: |
-          echo "CC=zig cc -target x86_64-linux-gnu.${{ matrix.glibc }}" >> "$GITHUB_ENV"
-          echo "CXX=zig c++ -target x86_64-linux-gnu.${{ matrix.glibc }}" >> "$GITHUB_ENV"
+          arch="${{ matrix.target }}"
+          arch="${arch%%-*}"
+          echo "CC=zig cc -target $arch-linux-gnu.${{ matrix.glibc }}" >> "$GITHUB_ENV"
+          echo "CXX=zig c++ -target $arch-linux-gnu.${{ matrix.glibc }}" >> "$GITHUB_ENV"
 
       - name: Build grammars
         run: '"$TOOL" build --all --out grammars'
