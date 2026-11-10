@@ -6,3 +6,6 @@ url = "https://github.com/airbus-cert/tree-sitter-powershell"
 rev = "c9316be0faca5d5b9fd3b57350de650755f42dc0"
 subpath = ""
 symbol = "tree_sitter_powershell"
+
+[own]
+context = true
