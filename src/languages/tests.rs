@@ -69,7 +69,10 @@ fn the_embedded_languages_parse() {
     let rust = languages.get("rust").expect("rust is pinned");
     assert_eq!(rust.symbol, "tree_sitter_rust");
     assert_eq!(rust.subpath, "");
-    assert!(rust.upstream.context.is_some());
+    assert!(matches!(
+        rust.origin.context,
+        Some(ContextOrigin::Upstream(_))
+    ));
     assert!(languages.query("rust", "highlights.scm").is_some());
     let inline = languages
         .get("markdown.inline")
@@ -187,6 +190,42 @@ fn a_context_rev_without_context_queries_is_refused() {
     let source = format!("[upstream]\nhelix = \"{REV}\"\ncontext = \"{REV}\"\n");
     let message = refused(vec![folder("ecma", &source, HIGHLIGHTS)], "");
     assert!(message.contains("context"), "{message}");
+}
+
+#[test]
+fn context_queries_written_here_are_accepted() {
+    let source = format!(
+        "{}\n[own]\ncontext = true\n",
+        pinned("c", REV, "tree_sitter_c")
+    );
+    let queries = [("context.scm", ""), ("highlights.scm", "")];
+    let languages = Languages::parse(vec![folder("c", &source, &queries)], "")
+        .expect("an own context.scm is accepted");
+    let c = languages.get("c").expect("c is pinned");
+    assert_eq!(c.origin.context, Some(ContextOrigin::Own));
+}
+
+#[test]
+fn context_queries_with_a_context_rev_and_written_here_are_refused() {
+    let source =
+        format!("[upstream]\nhelix = \"{REV}\"\ncontext = \"{REV}\"\n\n[own]\ncontext = true\n");
+    let queries = [("context.scm", ""), ("highlights.scm", "")];
+    let message = refused(vec![folder("ecma", &source, &queries)], "");
+    assert!(message.contains("context"), "{message}");
+}
+
+#[test]
+fn an_own_context_without_context_queries_is_refused() {
+    let source = format!("{}\n[own]\ncontext = true\n", upstream(REV));
+    let message = refused(vec![folder("ecma", &source, HIGHLIGHTS)], "");
+    assert!(message.contains("context"), "{message}");
+}
+
+#[test]
+fn an_own_table_naming_no_file_is_refused() {
+    let source = format!("{}\n[own]\ncontext = false\n", upstream(REV));
+    let message = refused(vec![folder("ecma", &source, HIGHLIGHTS)], "");
+    assert!(message.contains("own"), "{message}");
 }
 
 #[test]

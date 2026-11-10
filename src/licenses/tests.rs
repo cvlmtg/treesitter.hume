@@ -11,7 +11,7 @@ fn pin(subpath: &str) -> Pin {
         rev: REV.to_string(),
         subpath: subpath.to_string(),
         symbol: "tree_sitter_probe".to_string(),
-        upstream: Upstream {
+        origin: Origin {
             helix: REV.to_string(),
             context: None,
         },
@@ -142,11 +142,11 @@ const CONTEXT_REV: &str = "fedcba9876543210fedcba9876543210fedcba98";
 
 #[test]
 fn the_queries_notice_names_helix_its_commit_the_mpl_and_the_shipped_source() {
-    let upstream = Upstream {
+    let origin = Origin {
         helix: REV.to_string(),
         context: None,
     };
-    let notice = queries_notice("probe", &upstream, "v9.9.9");
+    let notice = queries_notice("probe", &origin, "v9.9.9");
 
     for part in [
         "https://github.com/helix-editor/helix",
@@ -164,11 +164,11 @@ fn the_queries_notice_names_helix_its_commit_the_mpl_and_the_shipped_source() {
 
 #[test]
 fn the_queries_notice_carries_the_context_queries_license() {
-    let upstream = Upstream {
+    let origin = Origin {
         helix: REV.to_string(),
-        context: Some(CONTEXT_REV.to_string()),
+        context: Some(ContextOrigin::Upstream(CONTEXT_REV.to_string())),
     };
-    let notice = queries_notice("probe", &upstream, "v9.9.9");
+    let notice = queries_notice("probe", &origin, "v9.9.9");
 
     for part in [
         "https://github.com/nvim-treesitter/nvim-treesitter-context",
@@ -177,4 +177,25 @@ fn the_queries_notice_carries_the_context_queries_license() {
     ] {
         assert!(notice.contains(part), "{part} in {notice}");
     }
+}
+
+#[test]
+fn the_queries_notice_carries_this_repositorys_license_for_its_own_context_queries() {
+    let origin = Origin {
+        helix: REV.to_string(),
+        context: Some(ContextOrigin::Own),
+    };
+    let notice = queries_notice("probe", &origin, "v9.9.9");
+
+    for part in [
+        "written for treesitter.hume",
+        "https://github.com/cvlmtg/treesitter.hume",
+        "Copyright (c) 2026 Matteo Cavalleri",
+        "Permission is hereby granted",
+        REV,
+        "Mozilla Public License 2.0",
+    ] {
+        assert!(notice.contains(part), "{part} in {notice}");
+    }
+    assert!(!notice.contains("nvim-treesitter-context"), "{notice}");
 }

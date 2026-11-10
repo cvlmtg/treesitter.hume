@@ -260,7 +260,7 @@ fn package(
         abi,
         platform: request.platform,
         tag: request.tag,
-        helix_rev: &pin.upstream.helix,
+        helix_rev: &pin.origin.helix,
     };
     let library_bytes = fs::read(library).map_err(|e| format!("{}: {e}", library.display()))?;
     let mut files = vec![
@@ -276,7 +276,7 @@ fn package(
     files.extend(licenses);
     files.push((
         "queries/NOTICE".to_string(),
-        licenses::queries_notice(&pin.name, &pin.upstream, request.tag).into_bytes(),
+        licenses::queries_notice(&pin.name, &pin.origin, request.tag).into_bytes(),
     ));
     files.extend(
         queries

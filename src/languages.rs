@@ -2,10 +2,11 @@
 //! `languages/`, and `exclusions.toml` (kept by hand), compiled into the
 //! binary so a build of version `v` always uses `v`'s pins and queries.
 //!
-//! A folder's `source.toml` names the upstream commits its files come from
-//! and, for a language with a grammar, pins that grammar. A folder without a
-//! pin holds queries other languages inherit. `build.rs` embeds each
-//! folder's `source.toml` and query files.
+//! A folder's `source.toml` names the upstream commits its files come from,
+//! or, in its `[own]` table, the files this repo wrote, and, for a language
+//! with a grammar, pins that grammar. A folder without a pin holds queries
+//! other languages inherit. `build.rs` embeds each folder's `source.toml`
+//! and query files.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
@@ -32,20 +33,45 @@ pub(crate) struct Folder<'a> {
     pub(crate) queries: &'a [(&'a str, &'a str)],
 }
 
-/// The upstream commits a folder's files come from: Helix for every file
-/// but `context.scm`, nvim-treesitter-context for `context.scm`. `context`
-/// is set if and only if the folder has a `context.scm`.
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct Upstream {
+/// Where a folder's query files come from: Helix's commit for every file
+/// but `context.scm`. `context` is set if and only if the folder has a
+/// `context.scm`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct Origin {
     pub(crate) helix: String,
-    pub(crate) context: Option<String>,
+    pub(crate) context: Option<ContextOrigin>,
+}
+
+/// Where `context.scm` comes from.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum ContextOrigin {
+    /// The nvim-treesitter-context commit.
+    Upstream(String),
+    /// Written in this repo.
+    Own,
+}
+
+/// The upstream commits a folder's files come from: Helix for every file
+/// but `context.scm`, nvim-treesitter-context for `context.scm`.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Upstream {
+    helix: String,
+    context: Option<String>,
+}
+
+/// The files this repo wrote instead of taking them from upstream.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Own {
+    context: bool,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct SourceFile {
     upstream: Upstream,
+    own: Option<Own>,
     grammar: Option<Grammar>,
 }
 
@@ -71,7 +97,7 @@ pub(crate) struct Pin {
     pub(crate) subpath: String,
     pub(crate) symbol: String,
     /// Where the language's own query files come from.
-    pub(crate) upstream: Upstream,
+    pub(crate) origin: Origin,
 }
 
 #[derive(Deserialize)]
@@ -208,22 +234,47 @@ fn parse_folder(
              not start with '.', and be at most {MAX_NAME_LEN} bytes"
         )));
     }
-    let SourceFile { upstream, grammar } = toml::from_str(folder.source)
+    let SourceFile {
+        upstream,
+        own,
+        grammar,
+    } = toml::from_str(folder.source)
         .map_err(|e| LanguagesError(format!("{name}/source.toml: {e}")))?;
     check_rev(&format!("{name}: upstream helix"), &upstream.helix)?;
-    match (&upstream.context, files.contains_key(CONTEXT_FILE)) {
-        (Some(rev), true) => check_rev(&format!("{name}: upstream context"), rev)?,
-        (None, false) => {}
+    let own_context = match own {
+        Some(Own { context: false }) => {
+            return Err(LanguagesError(format!(
+                "{name}: an [own] table that names no file"
+            )));
+        }
+        Some(Own { context: true }) => true,
+        None => false,
+    };
+    let context = match (upstream.context, own_context) {
+        (Some(_), true) => {
+            return Err(LanguagesError(format!(
+                "{name}: an upstream context commit, and {CONTEXT_FILE} in [own]"
+            )));
+        }
+        (Some(rev), false) => {
+            check_rev(&format!("{name}: upstream context"), &rev)?;
+            Some(ContextOrigin::Upstream(rev))
+        }
+        (None, true) => Some(ContextOrigin::Own),
+        (None, false) => None,
+    };
+    match (&context, files.contains_key(CONTEXT_FILE)) {
         (Some(_), false) => {
             return Err(LanguagesError(format!(
-                "{name}: an upstream context commit, but no {CONTEXT_FILE}"
+                "{name}: a {CONTEXT_FILE} origin, but no {CONTEXT_FILE}"
             )));
         }
         (None, true) => {
             return Err(LanguagesError(format!(
-                "{name}: {CONTEXT_FILE}, but no upstream context commit"
+                "{name}: {CONTEXT_FILE}, but neither an upstream context commit nor [own] context"
             )));
         }
+        _ => {}
     }
     let Some(grammar) = grammar else {
         return Ok(None);
@@ -246,7 +297,10 @@ fn parse_folder(
         rev: grammar.rev,
         subpath: grammar.subpath,
         symbol: grammar.symbol,
-        upstream,
+        origin: Origin {
+            helix: upstream.helix,
+            context,
+        },
     }))
 }
 

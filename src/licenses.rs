@@ -11,12 +11,13 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
-use crate::languages::{Pin, Upstream};
+use crate::languages::{ContextOrigin, Origin, Pin};
 
 const HELIX_URL: &str = "https://github.com/helix-editor/helix";
 const CONTEXT_URL: &str = "https://github.com/nvim-treesitter/nvim-treesitter-context";
 const REPO_URL: &str = "https://github.com/cvlmtg/treesitter.hume";
 const CONTEXT_LICENSE: &str = include_str!("../notices/nvim-treesitter-context.LICENSE");
+const REPO_LICENSE: &str = include_str!("../LICENSE");
 
 static LICENSE_NAME: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?i)^(LICEN[CS]E|COPYING|NOTICE|UNLICENSE)([.-].*)?$")
@@ -121,13 +122,18 @@ fn source_note(pin: &Pin) -> String {
 
 /// The text of `queries/NOTICE` for `language`'s queries, which this
 /// repo's `tag` ships with the changes it makes to them.
-pub(crate) fn queries_notice(language: &str, upstream: &Upstream, tag: &str) -> String {
-    let helix = &upstream.helix;
-    let origin = match &upstream.context {
-        Some(context) => format!(
+pub(crate) fn queries_notice(language: &str, origin: &Origin, tag: &str) -> String {
+    let helix = &origin.helix;
+    let source = match &origin.context {
+        Some(ContextOrigin::Upstream(context)) => format!(
             "context.scm comes from nvim-treesitter-context, {CONTEXT_URL},\n\
              at commit {context}. The other query files come from Helix's\n\
              runtime/queries, {HELIX_URL}, at commit {helix}.\n"
+        ),
+        Some(ContextOrigin::Own) => format!(
+            "context.scm was written for treesitter.hume, {REPO_URL}.\n\
+             The other query files come from Helix's runtime/queries,\n\
+             {HELIX_URL}, at commit {helix}.\n"
         ),
         None => format!(
             "These query files come from Helix's runtime/queries,\n\
@@ -135,7 +141,7 @@ pub(crate) fn queries_notice(language: &str, upstream: &Upstream, tag: &str) -> 
         ),
     };
     let mut notice = format!(
-        "{origin}\
+        "{source}\
          treesitter.hume may change them. The files as shipped are in\n\
          {REPO_URL} at tag {tag}, in languages/{language}/ and\n\
          the folders their `; inherits:` lines name. Each `; inherits:` line is\n\
@@ -144,9 +150,16 @@ pub(crate) fn queries_notice(language: &str, upstream: &Upstream, tag: &str) -> 
          The files from Helix are covered by the Mozilla Public License 2.0,\n\
          which you can get at https://mozilla.org/MPL/2.0/.\n"
     );
-    if upstream.context.is_some() {
-        notice.push_str("\ncontext.scm is covered by this license:\n\n");
-        notice.push_str(CONTEXT_LICENSE);
+    match &origin.context {
+        Some(ContextOrigin::Upstream(_)) => {
+            notice.push_str("\ncontext.scm is covered by this license:\n\n");
+            notice.push_str(CONTEXT_LICENSE);
+        }
+        Some(ContextOrigin::Own) => {
+            notice.push_str("\ncontext.scm is covered by treesitter.hume's license:\n\n");
+            notice.push_str(REPO_LICENSE);
+        }
+        None => {}
     }
     notice
 }

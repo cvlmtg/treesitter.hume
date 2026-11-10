@@ -12,7 +12,8 @@ Which grammars a release holds, the commit each one is built from, their
 queries and the language settings HUME starts from come from
 [Helix](https://helix-editor.com). The context queries, which name the
 scopes around a position, come from
-[nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context).
+[nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context),
+or are written here for a few languages it has none for.
 This repository keeps its own copy of both, with its own changes, and takes
 in upstream changes through reviewed snapshots.
 
@@ -29,8 +30,9 @@ Each `<language>.tar.gz` holds:
 
 - the compiled grammar, `<language>.so`, `.dylib` or `.dll`;
 - `queries/`, the language's query files with `; inherits:` already
-  resolved: `context.scm` from nvim-treesitter-context, when there is one,
-  and the others from Helix. Each compiles against the grammar beside it;
+  resolved: `context.scm`, when there is one, from nvim-treesitter-context
+  or written here, and the others from Helix. Each compiles against the
+  grammar beside it;
 - `manifest.scm`, which names the language, its grammar's source and commit,
   the C symbol to load, the tree-sitter ABI, the platform, the release tag and
   the Helix commit the language's queries come from;
@@ -39,7 +41,8 @@ Each `<language>.tar.gz` holds:
 - `queries/NOTICE`, which says where the query files come from and their
   licenses: the files from Helix are under the
   [Mozilla Public License 2.0](https://mozilla.org/MPL/2.0/), like the rest of
-  Helix, and `context.scm` under nvim-treesitter-context's MIT license.
+  Helix, and `context.scm` under the MIT license of nvim-treesitter-context
+  or, when it was written here, of this repository.
 
 A grammar whose repository has no license file is left out of the release,
 since nothing grants the right to redistribute it.
@@ -94,7 +97,12 @@ hume-grammar-build compile path/to/tree-sitter-mylang mylang.so
 - `languages/<name>/` holds one language: `source.toml`, which names the
   upstream commits its files come from and, for a language with a grammar,
   the grammar's repository, commit, subpath and C symbol; its query files;
-  and `language.toml`, Helix's settings for the language.
+  and `language.toml`, Helix's settings for the language. A `context.scm`
+  written here, for a language nvim-treesitter-context has none for, is
+  marked by an `[own]` table holding `context = true` in place of an
+  upstream context commit. If a later snapshot brings an upstream
+  `context.scm` for that language, the build fails until one of the two is
+  kept.
   `language-servers.toml` holds Helix's language-server settings. HUME
   generates its language data from these two files at the tag it pins.
 - `exclusions.toml` lists languages a release leaves out, each with its
@@ -124,7 +132,7 @@ hume-grammar-build compile path/to/tree-sitter-mylang mylang.so
 - [Helix](https://helix-editor.com): the list of grammars, the commit each
   one is built from, the query files and the language settings.
 - [nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context):
-  the context queries.
+  the context queries this repository does not write itself.
 - The authors of each grammar: an archive's `licenses/` holds its grammar's
   license, and `licenses/SOURCE` links the grammar's repository.
 
@@ -138,7 +146,7 @@ It does not cover what comes from elsewhere:
   holds;
 - what comes from Helix, the query files, each `language.toml` and
   `language-servers.toml`, is under the MPL-2.0;
-- the context queries are under nvim-treesitter-context's MIT license, in
-  `notices/`.
+- the context queries from nvim-treesitter-context are under its MIT
+  license, in `notices/`.
 
 Each archive's `queries/NOTICE` says which applies to its queries.

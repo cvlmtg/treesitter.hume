@@ -3,8 +3,9 @@
 # each member's byte range must hash to its digest and unpack to the
 # language's library, queries and a manifest naming that language, platform
 # and tag, to its grammar's license files beside licenses/SOURCE, and to a
-# queries/NOTICE naming the MPL-2.0 and the manifest's Helix commit, and
-# carrying nvim-treesitter-context's license when there is a context.scm.
+# queries/NOTICE naming the MPL-2.0 and the manifest's Helix commit, and,
+# when there is a context.scm, naming where it comes from, nvim-treesitter-context
+# or treesitter.hume, and carrying that project's license.
 # --glibc checks each Linux library against a glibc floor, --minos each
 # macOS library's minimum OS version.
 # Usage: verify-bundle.sh <dir> [--glibc <floor>] [--minos <version>]
@@ -89,9 +90,9 @@ for index in "${indexes[@]}"; do
             && grep -qF "$helix_rev" "$unpacked/queries/NOTICE" \
             || fail "$language: queries/NOTICE does not name the MPL-2.0 and Helix $helix_rev"
         if [[ -f "$unpacked/queries/context.scm" ]]; then
-            grep -qF "nvim-treesitter-context" "$unpacked/queries/NOTICE" \
+            grep -qE "nvim-treesitter-context|written for treesitter.hume" "$unpacked/queries/NOTICE" \
                 && grep -qF "Permission is hereby granted" "$unpacked/queries/NOTICE" \
-                || fail "$language: queries/NOTICE does not carry nvim-treesitter-context's license"
+                || fail "$language: queries/NOTICE does not carry context.scm's license"
         fi
         if [[ -n "$glibc" ]]; then
             bash "$scripts/check-glibc-floor.sh" "$glibc" "$library" >/dev/null \
