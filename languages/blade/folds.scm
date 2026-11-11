@@ -1,5 +1,15 @@
 ; inherits: html
 
-((directive_start) @start
-    (directive_end) @end.after
-    (#set! role block))
+[
+  (conditional)
+  (envoy)
+  (fragment)
+  (livewire)
+  (loop)
+  (once)
+  (php_statement)
+  (section)
+  (stack)
+  (switch)
+  (verbatim)
+] @fold
