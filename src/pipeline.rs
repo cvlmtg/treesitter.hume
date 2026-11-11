@@ -248,7 +248,9 @@ fn package(
         for parent in resolved.missing {
             warnings.push(format!("{file} inherits {parent:?}, which has no {file}"));
         }
-        queries.push((file.to_string(), resolved.text));
+        let text =
+            queries::rewrite::for_hume(file, &resolved.text).map_err(|e| format!("{file}: {e}"))?;
+        queries.push((file.to_string(), text));
     }
     let abi = probe::check(library, &pin.symbol, &queries).map_err(|e| e.to_string())?;
     let manifest = Manifest {

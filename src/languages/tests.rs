@@ -82,6 +82,30 @@ fn the_embedded_languages_parse() {
     assert!(languages.query("ecma", "highlights.scm").is_some());
 }
 
+/// Every shipped `context.scm` and `folds.scm` reads, and what it ships as
+/// keeps nothing the rewrite would take out.
+#[test]
+fn every_embedded_context_and_folds_query_rewrites() {
+    let languages = Languages::embedded().expect("embedded languages");
+    for folder in EMBEDDED {
+        for file in ["context.scm", "folds.scm"] {
+            if languages.query(folder.name, file).is_none() {
+                continue;
+            }
+            let resolved = crate::queries::resolve(folder.name, |language| {
+                languages.query(language, file).map(str::to_string)
+            })
+            .expect("resolves");
+            let rewrite = |text: &str| {
+                crate::queries::rewrite::for_hume(file, text)
+                    .unwrap_or_else(|e| panic!("{}/{file}: {e}", folder.name))
+            };
+            let shipped = rewrite(&resolved.text);
+            assert_eq!(rewrite(&shipped), shipped, "{}/{file}", folder.name);
+        }
+    }
+}
+
 #[test]
 fn a_folder_lists_its_query_files_in_name_order() {
     let source = pinned("probe", REV, "tree_sitter_probe");

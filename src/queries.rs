@@ -101,5 +101,7 @@ fn parent_text(
     expanded
 }
 
+pub(crate) mod rewrite;
+
 #[cfg(test)]
 mod tests;

@@ -50,10 +50,11 @@ fn grammar_repo(extra: &[(&str, &[u8])]) -> (tempfile::TempDir, String) {
 const HELIX_REV: &str = "0123456789abcdef0123456789abcdef01234567";
 const CONTEXT_REV: &str = "fedcba9876543210fedcba9876543210fedcba98";
 
-/// `probe`'s queries: highlights that inherit `base`'s, and context
-/// queries.
+/// `probe`'s queries: highlights that inherit `base`'s, and context and
+/// folds queries with the steps HUME's copy leaves out.
 const PROBE_QUERIES: &[(&str, &str)] = &[
-    ("context.scm", "(source) @context\n"),
+    ("context.scm", "(source (word) @context.end) @context\n"),
+    ("folds.scm", "(word)+ @fold\n"),
     ("highlights.scm", "; inherits: base\n(word) @variable\n"),
     ("textobjects.scm", "(word) @word.inside\n"),
 ];
@@ -190,6 +191,7 @@ fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
             library.as_str(),
             "queries/NOTICE",
             "queries/context.scm",
+            "queries/folds.scm",
             "queries/highlights.scm",
             "queries/textobjects.scm",
         ]
@@ -204,6 +206,7 @@ fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
         "\n(source) @base\n\n(word) @variable\n"
     );
     assert_eq!(text(&probe, "queries/context.scm"), "(source) @context\n");
+    assert_eq!(text(&probe, "queries/folds.scm"), "(word) @fold\n");
     let manifest = text(&probe, "manifest.scm");
     for field in [
         "(name . \"probe\")",
