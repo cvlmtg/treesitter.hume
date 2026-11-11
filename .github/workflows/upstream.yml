@@ -36,11 +36,13 @@ jobs:
           set -euo pipefail
           helix="$(git ls-remote https://github.com/helix-editor/helix refs/heads/master | cut -f1)"
           context="$(git ls-remote https://github.com/nvim-treesitter/nvim-treesitter-context refs/heads/master | cut -f1)"
+          folds="$(git ls-remote https://github.com/nvim-treesitter/nvim-treesitter refs/heads/main | cut -f1)"
           tree="$RUNNER_TEMP/upstream"
           git worktree add -B upstream "$tree" origin/upstream
           old_helix="$(python3 -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))["helix"])' "$tree/upstream.toml")"
           old_context="$(python3 -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))["context"])' "$tree/upstream.toml")"
-          python3 scripts/import-upstream.py --helix "$helix" --context "$context" --into "$tree" > "$RUNNER_TEMP/report.txt"
+          old_folds="$(python3 -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))["folds"])' "$tree/upstream.toml")"
+          python3 scripts/import-upstream.py --helix "$helix" --context "$context" --folds "$folds" --into "$tree" > "$RUNNER_TEMP/report.txt"
           git -C "$tree" add -A
           if git -C "$tree" diff --cached --quiet; then
             echo "No upstream change."
@@ -48,14 +50,14 @@ jobs:
             exit 0
           fi
           {
-            bash scripts/upstream-changes.sh "$old_helix" "$helix" "$old_context" "$context" "$RUNNER_TEMP/report.txt"
+            bash scripts/upstream-changes.sh "$old_helix" "$helix" "$old_context" "$context" "$old_folds" "$folds" "$RUNNER_TEMP/report.txt"
             printf '\nThe build of main with this snapshot merged: %s\n' \
               "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           } > "$RUNNER_TEMP/body.md"
           git -C "$tree" \
             -c user.name="github-actions[bot]" \
             -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -q -m "chore(upstream): snapshot Helix ${helix:0:8} and nvim-treesitter-context ${context:0:8}"
+            commit -q -m "chore(upstream): snapshot Helix ${helix:0:8}, nvim-treesitter-context ${context:0:8} and nvim-treesitter ${folds:0:8}"
           git -C "$tree" push origin upstream
           echo "changed=true" >> "$GITHUB_OUTPUT"
 

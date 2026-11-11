@@ -22,6 +22,7 @@ static EMBEDDED: &[Folder<'static>] = &include!(concat!(env!("OUT_DIR"), "/langu
 const MAX_NAME_LEN: usize = 100 - ".tar.gz".len();
 
 const CONTEXT_FILE: &str = "context.scm";
+const FOLDS_FILE: &str = "folds.scm";
 
 /// One folder of `languages/`, as text.
 #[derive(Clone, Copy)]
@@ -33,9 +34,10 @@ pub(crate) struct Folder<'a> {
     pub(crate) queries: &'a [(&'a str, &'a str)],
 }
 
-/// Where a folder's query files come from: Helix's commit for every file
-/// but `context.scm`. `context` is set if and only if the folder has a
-/// `context.scm`.
+/// Where a pinned language's query files come from: Helix's commit for
+/// every file but `context.scm` and a `folds.scm` from nvim-treesitter
+/// ([`Languages::folds_rev`]). `context` is set if and only if the folder
+/// has a `context.scm`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Origin {
     pub(crate) helix: String,
@@ -51,13 +53,15 @@ pub(crate) enum ContextOrigin {
     Own,
 }
 
-/// The upstream commits a folder's files come from: Helix for every file
-/// but `context.scm`, nvim-treesitter-context for `context.scm`.
+/// The upstream commits a folder's files come from: nvim-treesitter-context
+/// for `context.scm`, nvim-treesitter for `folds.scm` when `folds` is set,
+/// and Helix for every other file.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Upstream {
     helix: String,
     context: Option<String>,
+    folds: Option<String>,
 }
 
 /// The files this repo wrote instead of taking them from upstream.
@@ -121,6 +125,10 @@ struct Exclusion {
 pub(crate) struct Languages<'a> {
     pins: Vec<Pin>,
     queries: BTreeMap<&'a str, BTreeMap<&'a str, &'a str>>,
+    /// The nvim-treesitter commit of each folder whose `folds.scm` comes
+    /// from there, pinned or not: a language's shipped `folds.scm` can
+    /// inherit from a folder whose `folds.scm` comes from elsewhere.
+    folds: BTreeMap<&'a str, String>,
     exclusions: Vec<Exclusion>,
 }
 
@@ -147,6 +155,7 @@ impl<'a> Languages<'a> {
     ) -> Result<Self, LanguagesError> {
         let mut pins = Vec::new();
         let mut queries = BTreeMap::new();
+        let mut folds = BTreeMap::new();
         for folder in folders {
             if queries.contains_key(folder.name) {
                 return Err(LanguagesError(format!(
@@ -155,8 +164,10 @@ impl<'a> Languages<'a> {
                 )));
             }
             let files: BTreeMap<&str, &str> = folder.queries.iter().copied().collect();
-            if let Some(pin) = parse_folder(&folder, &files)? {
-                pins.push(pin);
+            let parsed = parse_folder(&folder, &files)?;
+            pins.extend(parsed.pin);
+            if let Some(rev) = parsed.folds {
+                folds.insert(folder.name, rev);
             }
             queries.insert(folder.name, files);
         }
@@ -182,6 +193,7 @@ impl<'a> Languages<'a> {
         Ok(Self {
             pins,
             queries,
+            folds,
             exclusions: exclude,
         })
     }
@@ -206,6 +218,12 @@ impl<'a> Languages<'a> {
         self.queries.get(folder)?.get(file).copied()
     }
 
+    /// The nvim-treesitter commit `folder`'s `folds.scm` comes from, or
+    /// None when it has none or it comes from Helix.
+    pub(crate) fn folds_rev(&self, folder: &str) -> Option<&str> {
+        self.folds.get(folder).map(String::as_str)
+    }
+
     /// The languages a release for `platform` holds: every pin its
     /// exclusions leave in.
     pub(crate) fn release(&self, platform: &str) -> Vec<&Pin> {
@@ -222,11 +240,15 @@ impl<'a> Languages<'a> {
     }
 }
 
-/// `folder`'s pin, or None for a folder of inherited queries only.
-fn parse_folder(
-    folder: &Folder,
-    files: &BTreeMap<&str, &str>,
-) -> Result<Option<Pin>, LanguagesError> {
+/// What a folder's `source.toml` says.
+struct Parsed {
+    /// None for a folder of inherited queries only.
+    pin: Option<Pin>,
+    /// The nvim-treesitter commit its `folds.scm` comes from.
+    folds: Option<String>,
+}
+
+fn parse_folder(folder: &Folder, files: &BTreeMap<&str, &str>) -> Result<Parsed, LanguagesError> {
     let name = folder.name;
     if !is_language_name(name) {
         return Err(LanguagesError(format!(
@@ -276,8 +298,17 @@ fn parse_folder(
         }
         _ => {}
     }
+    if let Some(rev) = &upstream.folds {
+        check_rev(&format!("{name}: upstream folds"), rev)?;
+        if !files.contains_key(FOLDS_FILE) {
+            return Err(LanguagesError(format!(
+                "{name}: an upstream folds commit, but no {FOLDS_FILE}"
+            )));
+        }
+    }
+    let folds = upstream.folds;
     let Some(grammar) = grammar else {
-        return Ok(None);
+        return Ok(Parsed { pin: None, folds });
     };
     check_rev(name, &grammar.rev)?;
     if !is_c_identifier(&grammar.symbol) {
@@ -291,17 +322,20 @@ fn parse_folder(
             "{name}: pinned, but has no highlights.scm"
         )));
     }
-    Ok(Some(Pin {
-        name: name.to_string(),
-        url: grammar.url,
-        rev: grammar.rev,
-        subpath: grammar.subpath,
-        symbol: grammar.symbol,
-        origin: Origin {
-            helix: upstream.helix,
-            context,
-        },
-    }))
+    Ok(Parsed {
+        pin: Some(Pin {
+            name: name.to_string(),
+            url: grammar.url,
+            rev: grammar.rev,
+            subpath: grammar.subpath,
+            symbol: grammar.symbol,
+            origin: Origin {
+                helix: upstream.helix,
+                context,
+            },
+        }),
+        folds,
+    })
 }
 
 fn check_rev(what: &str, rev: &str) -> Result<(), LanguagesError> {

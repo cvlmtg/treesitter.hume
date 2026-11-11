@@ -94,6 +94,10 @@ for index in "${indexes[@]}"; do
                 && grep -qF "Permission is hereby granted" "$unpacked/queries/NOTICE" \
                 || fail "$language: queries/NOTICE does not carry context.scm's license"
         fi
+        if grep -qF "holds queries from nvim-treesitter," "$unpacked/queries/NOTICE"; then
+            grep -qF "Apache License" "$unpacked/queries/NOTICE" \
+                || fail "$language: queries/NOTICE does not carry nvim-treesitter's license"
+        fi
         if [[ -n "$glibc" ]]; then
             bash "$scripts/check-glibc-floor.sh" "$glibc" "$library" >/dev/null \
                 || fail "$language: needs a newer glibc than $glibc"

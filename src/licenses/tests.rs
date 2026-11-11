@@ -3,6 +3,7 @@ use std::fs;
 use super::*;
 
 const REV: &str = "0123456789abcdef0123456789abcdef01234567";
+const FOLDS_REV: &str = "89abcdef0123456789abcdef0123456789abcdef";
 
 fn pin(subpath: &str) -> Pin {
     Pin {
@@ -146,7 +147,7 @@ fn the_queries_notice_names_helix_its_commit_the_mpl_and_the_shipped_source() {
         helix: REV.to_string(),
         context: None,
     };
-    let notice = queries_notice("probe", &origin, "v9.9.9");
+    let notice = queries_notice("probe", &origin, &BTreeSet::new(), "v9.9.9");
 
     for part in [
         "https://github.com/helix-editor/helix",
@@ -160,6 +161,28 @@ fn the_queries_notice_names_helix_its_commit_the_mpl_and_the_shipped_source() {
         assert!(notice.contains(part), "{part} in {notice}");
     }
     assert!(!notice.contains("nvim-treesitter-context"), "{notice}");
+    assert!(!notice.contains("Apache License"), "{notice}");
+}
+
+#[test]
+fn the_queries_notice_carries_the_folds_queries_license() {
+    let origin = Origin {
+        helix: REV.to_string(),
+        context: None,
+    };
+    let folds = BTreeSet::from([FOLDS_REV]);
+    let notice = queries_notice("probe", &origin, &folds, "v9.9.9");
+
+    for part in [
+        "folds.scm holds queries from nvim-treesitter, https://github.com/nvim-treesitter/nvim-treesitter,",
+        FOLDS_REV,
+        "Apache License",
+        "The other queries come from Helix",
+        REV,
+        "Mozilla Public License 2.0",
+    ] {
+        assert!(notice.contains(part), "{part} in {notice}");
+    }
 }
 
 #[test]
@@ -168,7 +191,7 @@ fn the_queries_notice_carries_the_context_queries_license() {
         helix: REV.to_string(),
         context: Some(ContextOrigin::Upstream(CONTEXT_REV.to_string())),
     };
-    let notice = queries_notice("probe", &origin, "v9.9.9");
+    let notice = queries_notice("probe", &origin, &BTreeSet::new(), "v9.9.9");
 
     for part in [
         "https://github.com/nvim-treesitter/nvim-treesitter-context",
@@ -185,7 +208,7 @@ fn the_queries_notice_carries_this_repositorys_license_for_its_own_context_queri
         helix: REV.to_string(),
         context: Some(ContextOrigin::Own),
     };
-    let notice = queries_notice("probe", &origin, "v9.9.9");
+    let notice = queries_notice("probe", &origin, &BTreeSet::new(), "v9.9.9");
 
     for part in [
         "written for treesitter.hume",

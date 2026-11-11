@@ -1,6 +1,7 @@
 use super::*;
 
 const REV: &str = "0123456789abcdef0123456789abcdef01234567";
+const FOLDS_REV: &str = "89abcdef0123456789abcdef0123456789abcdef";
 const HIGHLIGHTS: &[(&str, &str)] = &[("highlights.scm", "(word) @variable\n")];
 
 const JAVASCRIPT: &str = "[upstream]
@@ -243,6 +244,43 @@ fn an_own_context_without_context_queries_is_refused() {
     let source = format!("{}\n[own]\ncontext = true\n", upstream(REV));
     let message = refused(vec![folder("ecma", &source, HIGHLIGHTS)], "");
     assert!(message.contains("context"), "{message}");
+}
+
+#[test]
+fn a_folds_rev_is_kept_for_pinned_and_query_only_folders() {
+    let source = format!(
+        "[upstream]\nhelix = \"{REV}\"\nfolds = \"{FOLDS_REV}\"\n\n[grammar]\nurl = \"https://example.com/c\"\nrev = \"{REV}\"\nsubpath = \"\"\nsymbol = \"tree_sitter_c\"\n"
+    );
+    let base = format!("[upstream]\nhelix = \"{REV}\"\nfolds = \"{FOLDS_REV}\"\n");
+    let queries = [("folds.scm", ""), ("highlights.scm", "")];
+    let languages = Languages::parse(
+        vec![
+            folder("c", &source, &queries),
+            folder("ecma", &base, &queries),
+            folder("javascript", JAVASCRIPT, &queries),
+        ],
+        "",
+    )
+    .expect("languages");
+    assert_eq!(languages.folds_rev("c"), Some(FOLDS_REV));
+    assert_eq!(languages.folds_rev("ecma"), Some(FOLDS_REV));
+    assert_eq!(languages.folds_rev("javascript"), None);
+}
+
+#[test]
+fn a_folds_rev_without_folds_queries_is_refused() {
+    let source = format!("[upstream]\nhelix = \"{REV}\"\nfolds = \"{FOLDS_REV}\"\n");
+    let message = refused(vec![folder("ecma", &source, HIGHLIGHTS)], "");
+    assert!(message.contains("folds"), "{message}");
+}
+
+#[test]
+fn a_short_folds_rev_is_refused() {
+    let source =
+        "[upstream]\nhelix = \"0123456789abcdef0123456789abcdef01234567\"\nfolds = \"abc\"\n";
+    let queries = [("folds.scm", ""), ("highlights.scm", "")];
+    let message = refused(vec![folder("ecma", source, &queries)], "");
+    assert!(message.contains("folds"), "{message}");
 }
 
 #[test]

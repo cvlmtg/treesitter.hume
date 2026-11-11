@@ -13,9 +13,12 @@ queries and the language settings HUME starts from come from
 [Helix](https://helix-editor.com). The context queries, which name the
 scopes around a position, come from
 [nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context),
-or are written here for a few languages it has none for.
-This repository keeps its own copy of both, with its own changes, and takes
-in upstream changes through reviewed snapshots.
+or are written here for a few languages it has none for. The folds queries,
+which name the regions a fold hides, come from
+[nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) when
+it has one for the language, and otherwise from Helix.
+This repository keeps its own copy of all three, with its own changes, and
+takes in upstream changes through reviewed snapshots.
 
 ## What a release holds
 
@@ -31,8 +34,8 @@ Each `<language>.tar.gz` holds:
 - the compiled grammar, `<language>.so`, `.dylib` or `.dll`;
 - `queries/`, the language's query files with `; inherits:` already
   resolved: `context.scm`, when there is one, from nvim-treesitter-context
-  or written here, and the others from Helix. Each compiles against the
-  grammar beside it. `context.scm` ships without the steps only its
+  or written here, `folds.scm` from nvim-treesitter when it has one, and
+  the others from Helix. Each compiles against the grammar beside it. `context.scm` ships without the steps only its
   `@context.end` capture needs, and `folds.scm` without repetition (`+`
   dropped, `*` read as `?`): HUME uses neither, and both slow a query
   down in a node with many children;
@@ -44,8 +47,9 @@ Each `<language>.tar.gz` holds:
 - `queries/NOTICE`, which says where the query files come from and their
   licenses: the files from Helix are under the
   [Mozilla Public License 2.0](https://mozilla.org/MPL/2.0/), like the rest of
-  Helix, and `context.scm` under the MIT license of nvim-treesitter-context
-  or, when it was written here, of this repository.
+  Helix, `context.scm` under the MIT license of nvim-treesitter-context
+  or, when it was written here, of this repository, and the queries from
+  nvim-treesitter under its Apache License 2.0.
 
 A grammar whose repository has no license file is left out of the release,
 since nothing grants the right to redistribute it.
@@ -110,9 +114,10 @@ hume-grammar-build compile path/to/tree-sitter-mylang mylang.so
   generates its language data from these two files at the tag it pins.
 - `exclusions.toml` lists languages a release leaves out, each with its
   reason and, optionally, the platforms it applies to.
-- The `upstream` branch holds Helix and nvim-treesitter-context as
-  `scripts/import-upstream.py` writes them, and `main` merges it. Each
-  month the upstream workflow imports both upstreams' default branches
+- The `upstream` branch holds Helix, nvim-treesitter-context and
+  nvim-treesitter as `scripts/import-upstream.py` writes them, and `main`
+  merges it. Each month the upstream workflow imports the upstreams' default
+  branches
   into `upstream`, opens a pull request into `main` listing the commits
   behind each changed language, and builds `main` with the snapshot
   merged. Merge that pull request with a merge commit, never a squash or a
@@ -136,6 +141,8 @@ hume-grammar-build compile path/to/tree-sitter-mylang mylang.so
   one is built from, the query files and the language settings.
 - [nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context):
   the context queries this repository does not write itself.
+- [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter):
+  the folds queries of the languages it has them for.
 - The authors of each grammar: an archive's `licenses/` holds its grammar's
   license, and `licenses/SOURCE` links the grammar's repository.
 
@@ -150,6 +157,7 @@ It does not cover what comes from elsewhere:
 - what comes from Helix, the query files, each `language.toml` and
   `language-servers.toml`, is under the MPL-2.0;
 - the context queries from nvim-treesitter-context are under its MIT
-  license, in `notices/`.
+  license, and the folds queries from nvim-treesitter under its Apache
+  License 2.0, both in `notices/`.
 
 Each archive's `queries/NOTICE` says which applies to its queries.

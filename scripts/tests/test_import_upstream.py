@@ -24,6 +24,8 @@ HELIX_OLD = "a" * 40
 HELIX_NEW = "b" * 40
 CONTEXT_OLD = "c" * 40
 CONTEXT_NEW = "d" * 40
+FOLDS_OLD = "e" * 40
+FOLDS_NEW = "f" * 40
 
 
 def doc(languages, grammars):
@@ -155,9 +157,10 @@ class SplitLanguagesToml(unittest.TestCase):
             self.split('theme = "x"\n' + LANGUAGES_TOML)
 
 
-class ContextNames(unittest.TestCase):
+class NvimNames(unittest.TestCase):
     def test_nvim_names_map_to_helix_names(self):
         self.assertEqual(imp.helix_name("c_sharp"), "c-sharp")
+        self.assertEqual(imp.helix_name("query"), "tsq")
         self.assertEqual(imp.helix_name("rust"), "rust")
 
     def test_inherits_names_are_mapped(self):
@@ -179,13 +182,15 @@ def write(root, files):
 
 
 class Snapshot(unittest.TestCase):
-    """Builds a snapshot from fake Helix and nvim-treesitter-context trees."""
+    """Builds a snapshot from fake Helix, nvim-treesitter-context and
+    nvim-treesitter trees."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         root = Path(self.tmp.name)
         self.helix = root / "helix"
         self.context = root / "context"
+        self.folds = root / "folds"
         self.out = root / "out"
         self.out.mkdir()
         write(
@@ -196,6 +201,8 @@ class Snapshot(unittest.TestCase):
                 "runtime/queries/rust/README.md": "not a query\n",
                 "runtime/queries/python/highlights.scm": "; inherits: base\n(identifier) @variable\n",
                 "runtime/queries/python/context.scm": "(helix) @context\n",
+                "runtime/queries/python/folds.scm": "; inherits: base\n(helix) @fold\n",
+                "runtime/queries/rust/folds.scm": "(helix) @fold\n",
                 "runtime/queries/base/highlights.scm": "(comment) @comment\n",
             },
         )
@@ -208,22 +215,34 @@ class Snapshot(unittest.TestCase):
                 "queries/terraform/context.scm": "(block) @context\n",
             },
         )
+        write(
+            self.folds,
+            {
+                "LICENSE": "Apache text\n",
+                "runtime/queries/rust/folds.scm": "(function_item) @fold\n",
+                "runtime/queries/base/folds.scm": "; inherits: php_only\n(comment) @fold\n",
+                "runtime/queries/rust/highlights.scm": "(nvim) @variable\n",
+                "runtime/queries/terraform/folds.scm": "(block) @fold\n",
+            },
+        )
 
     def tearDown(self):
         self.tmp.cleanup()
 
-    def snapshot(self, helix_rev, context_rev):
-        return imp.snapshot(self.helix, helix_rev, self.context, context_rev, self.out)
+    def snapshot(self, helix_rev, context_rev, folds_rev):
+        return imp.snapshot(
+            self.helix, helix_rev, self.context, context_rev, self.folds, folds_rev, self.out
+        )
 
     def source(self, name):
         return tomllib.loads((self.out / "languages" / name / "source.toml").read_text())
 
     def test_the_first_snapshot_writes_the_layout(self):
-        self.snapshot(HELIX_OLD, CONTEXT_OLD)
+        self.snapshot(HELIX_OLD, CONTEXT_OLD, FOLDS_OLD)
         self.assertEqual(
             self.source("rust"),
             {
-                "upstream": {"helix": HELIX_OLD, "context": CONTEXT_OLD},
+                "upstream": {"helix": HELIX_OLD, "context": CONTEXT_OLD, "folds": FOLDS_OLD},
                 "grammar": {
                     "url": "https://rust",
                     "rev": "3" * 40,
@@ -232,57 +251,101 @@ class Snapshot(unittest.TestCase):
                 },
             },
         )
-        self.assertEqual(self.source("base"), {"upstream": {"helix": HELIX_OLD}})
+        self.assertEqual(self.source("base"), {"upstream": {"helix": HELIX_OLD, "folds": FOLDS_OLD}})
         rust = self.out / "languages" / "rust"
-        self.assertEqual(sorted(p.name for p in rust.iterdir()), ["context.scm", "highlights.scm", "language.toml", "source.toml"])
+        self.assertEqual(
+            sorted(p.name for p in rust.iterdir()),
+            ["context.scm", "folds.scm", "highlights.scm", "language.toml", "source.toml"],
+        )
         self.assertEqual(
             tomllib.loads((self.out / "upstream.toml").read_text()),
-            {"helix": HELIX_OLD, "context": CONTEXT_OLD},
+            {"helix": HELIX_OLD, "context": CONTEXT_OLD, "folds": FOLDS_OLD},
         )
         self.assertEqual((self.out / "notices" / "nvim-treesitter-context.LICENSE").read_text(), "MIT text\n")
+        self.assertEqual((self.out / "notices" / "nvim-treesitter.LICENSE").read_text(), "Apache text\n")
         self.assertTrue((self.out / "language-servers.toml").read_text().startswith("[language-server]\n"))
 
     def test_context_queries_come_from_nvim_treesitter_context_only(self):
-        self.snapshot(HELIX_OLD, CONTEXT_OLD)
+        self.snapshot(HELIX_OLD, CONTEXT_OLD, FOLDS_OLD)
         self.assertEqual(
             (self.out / "languages" / "python" / "context.scm").read_text(),
             "(function_definition) @context\n",
         )
 
     def test_a_context_language_helix_lacks_is_left_out(self):
-        report = self.snapshot(HELIX_OLD, CONTEXT_OLD)
+        report = self.snapshot(HELIX_OLD, CONTEXT_OLD, FOLDS_OLD)
         self.assertFalse((self.out / "languages" / "terraform").exists())
         self.assertEqual(report.skipped_context, ["terraform"])
 
+    def test_folds_queries_come_from_nvim_treesitter_when_it_has_them(self):
+        report = self.snapshot(HELIX_OLD, CONTEXT_OLD, FOLDS_OLD)
+        languages = self.out / "languages"
+        self.assertEqual((languages / "rust" / "folds.scm").read_text(), "(function_item) @fold\n")
+        self.assertEqual((languages / "rust" / "highlights.scm").read_text(), "(identifier) @variable\n")
+        self.assertEqual((languages / "python" / "folds.scm").read_text(), "; inherits: base\n(helix) @fold\n")
+        self.assertNotIn("folds", self.source("python")["upstream"])
+        self.assertEqual((languages / "base" / "folds.scm").read_text(), "; inherits: php-only\n(comment) @fold\n")
+        self.assertEqual(report.skipped_folds, ["terraform"])
+
     def test_an_unchanged_language_keeps_its_revisions(self):
-        self.snapshot(HELIX_OLD, CONTEXT_OLD)
-        report = self.snapshot(HELIX_NEW, CONTEXT_NEW)
-        self.assertEqual(self.source("rust")["upstream"], {"helix": HELIX_OLD, "context": CONTEXT_OLD})
+        self.snapshot(HELIX_OLD, CONTEXT_OLD, FOLDS_OLD)
+        report = self.snapshot(HELIX_NEW, CONTEXT_NEW, FOLDS_NEW)
+        self.assertEqual(
+            self.source("rust")["upstream"],
+            {"helix": HELIX_OLD, "context": CONTEXT_OLD, "folds": FOLDS_OLD},
+        )
         self.assertEqual(report.changed, [])
         self.assertEqual(
             tomllib.loads((self.out / "upstream.toml").read_text()),
-            {"helix": HELIX_NEW, "context": CONTEXT_NEW},
+            {"helix": HELIX_NEW, "context": CONTEXT_NEW, "folds": FOLDS_NEW},
         )
 
+    def test_a_folds_change_moves_the_folds_revision_only(self):
+        self.snapshot(HELIX_OLD, CONTEXT_OLD, FOLDS_OLD)
+        write(self.folds, {"runtime/queries/rust/folds.scm": "(impl_item) @fold\n"})
+        self.snapshot(HELIX_NEW, CONTEXT_NEW, FOLDS_NEW)
+        self.assertEqual(
+            self.source("rust")["upstream"],
+            {"helix": HELIX_OLD, "context": CONTEXT_OLD, "folds": FOLDS_NEW},
+        )
+
+    def test_a_helix_folds_query_nvim_replaces_moves_no_revision(self):
+        self.snapshot(HELIX_OLD, CONTEXT_OLD, FOLDS_OLD)
+        write(self.helix, {"runtime/queries/rust/folds.scm": "(changed) @fold\n"})
+        report = self.snapshot(HELIX_NEW, CONTEXT_NEW, FOLDS_NEW)
+        self.assertEqual(self.source("rust")["upstream"]["helix"], HELIX_OLD)
+        self.assertEqual(report.changed, [])
+
+    def test_a_helix_folds_query_inheriting_an_nvim_one_follows_its_change(self):
+        self.snapshot(HELIX_OLD, CONTEXT_OLD, FOLDS_OLD)
+        write(self.folds, {"runtime/queries/base/folds.scm": "(block_comment) @fold\n"})
+        report = self.snapshot(HELIX_NEW, CONTEXT_NEW, FOLDS_NEW)
+        self.assertEqual(self.source("python")["upstream"]["helix"], HELIX_NEW)
+        self.assertEqual(self.source("base")["upstream"]["folds"], FOLDS_NEW)
+        self.assertEqual(report.changed, ["base", "python"])
+
     def test_a_parent_change_moves_the_child_helix_revision_only(self):
-        self.snapshot(HELIX_OLD, CONTEXT_OLD)
+        self.snapshot(HELIX_OLD, CONTEXT_OLD, FOLDS_OLD)
         write(self.helix, {"runtime/queries/base/highlights.scm": "(comment) @comment.line\n"})
-        report = self.snapshot(HELIX_NEW, CONTEXT_NEW)
+        report = self.snapshot(HELIX_NEW, CONTEXT_NEW, FOLDS_NEW)
         self.assertEqual(self.source("python")["upstream"], {"helix": HELIX_NEW, "context": CONTEXT_OLD})
         self.assertEqual(self.source("rust")["upstream"]["helix"], HELIX_OLD)
         self.assertEqual(report.changed, ["base", "python"])
 
     def test_a_context_change_moves_the_context_revision_only(self):
-        self.snapshot(HELIX_OLD, CONTEXT_OLD)
+        self.snapshot(HELIX_OLD, CONTEXT_OLD, FOLDS_OLD)
         write(self.context, {"queries/rust/context.scm": "(impl_item) @context\n"})
-        self.snapshot(HELIX_NEW, CONTEXT_NEW)
-        self.assertEqual(self.source("rust")["upstream"], {"helix": HELIX_OLD, "context": CONTEXT_NEW})
+        self.snapshot(HELIX_NEW, CONTEXT_NEW, FOLDS_NEW)
+        self.assertEqual(
+            self.source("rust")["upstream"],
+            {"helix": HELIX_OLD, "context": CONTEXT_NEW, "folds": FOLDS_OLD},
+        )
 
     def test_a_language_upstream_dropped_is_removed(self):
-        self.snapshot(HELIX_OLD, CONTEXT_OLD)
+        self.snapshot(HELIX_OLD, CONTEXT_OLD, FOLDS_OLD)
         (self.helix / "runtime/queries/base/highlights.scm").unlink()
         (self.helix / "runtime/queries/base").rmdir()
-        report = self.snapshot(HELIX_NEW, CONTEXT_NEW)
+        report = self.snapshot(HELIX_NEW, CONTEXT_NEW, FOLDS_NEW)
         self.assertFalse((self.out / "languages" / "base").exists())
         self.assertEqual(report.removed, ["base"])
 

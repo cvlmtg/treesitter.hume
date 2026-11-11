@@ -6,7 +6,8 @@
 //! language's archive. The checkout is removed when its unit ends, so disk
 //! use stays bounded by the number of workers.
 
-use std::collections::BTreeMap;
+use std::cell::RefCell;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::fs;
 use std::io;
@@ -240,11 +241,22 @@ fn package(
     let licenses = licenses::grammar(pin, checkout).map_err(|e| e.to_string())?;
     let request = context.request;
     let mut queries = Vec::new();
+    let mut folds = BTreeSet::new();
     for file in request.queries.query_files(&pin.name) {
+        let read_from = RefCell::new(Vec::new());
         let resolved = queries::resolve(&pin.name, |language| {
-            request.queries.query(language, file).map(str::to_string)
+            let text = request.queries.query(language, file)?;
+            read_from.borrow_mut().push(language.to_string());
+            Some(text.to_string())
         })
         .map_err(|e: QueryError| format!("{file}: {e}"))?;
+        if file == "folds.scm" {
+            folds = read_from
+                .into_inner()
+                .iter()
+                .filter_map(|folder| request.queries.folds_rev(folder))
+                .collect();
+        }
         for parent in resolved.missing {
             warnings.push(format!("{file} inherits {parent:?}, which has no {file}"));
         }
@@ -278,7 +290,7 @@ fn package(
     files.extend(licenses);
     files.push((
         "queries/NOTICE".to_string(),
-        licenses::queries_notice(&pin.name, &pin.origin, request.tag).into_bytes(),
+        licenses::queries_notice(&pin.name, &pin.origin, &folds, request.tag).into_bytes(),
     ));
     files.extend(
         queries

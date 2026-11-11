@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Write a snapshot of Helix and nvim-treesitter-context into the upstream tree.
+"""Write a snapshot of Helix, nvim-treesitter-context and nvim-treesitter into the upstream tree.
 
-Usage: scripts/import-upstream.py --helix <sha> --context <sha> --into <dir>
+Usage: scripts/import-upstream.py --helix <sha> --context <sha> --folds <sha> --into <dir>
 
-Checks out Helix's languages.toml and runtime/queries, and
-nvim-treesitter-context's queries, at the given commits, and rewrites
-`<dir>`'s upstream.toml, language-servers.toml, notices/ and languages/ from
-them. `<dir>` is a worktree of the `upstream` branch; the script touches
-nothing else in it. Prints the languages added, removed and changed.
+Checks out Helix's languages.toml and runtime/queries,
+nvim-treesitter-context's queries and nvim-treesitter's runtime/queries at
+the given commits, and rewrites `<dir>`'s upstream.toml,
+language-servers.toml, notices/ and languages/ from them. `<dir>` is a
+worktree of the `upstream` branch; the script touches nothing else in it.
+Prints the languages added, removed and changed.
 """
 
 from __future__ import annotations
@@ -33,6 +34,7 @@ except ImportError:
 
 HELIX_URL = "https://github.com/helix-editor/helix"
 CONTEXT_URL = "https://github.com/nvim-treesitter/nvim-treesitter-context"
+FOLDS_URL = "https://github.com/nvim-treesitter/nvim-treesitter"
 
 # A language name names its folder and its archive: lowercase so it stays
 # distinct on case-insensitive file systems, no leading dot so it is never a
@@ -41,14 +43,22 @@ LANGUAGE_NAME = re.compile(r"[a-z0-9_-][a-z0-9._-]*")
 
 FULL_REV = re.compile(r"[0-9a-f]{40}")
 
-# nvim-treesitter-context names that differ from Helix's for the same
-# language. Any other name is taken as Helix's own.
-CONTEXT_NAMES = {
+# nvim-treesitter and nvim-treesitter-context names that differ from Helix's
+# for the same language. Any other name is taken as Helix's own.
+NVIM_NAMES = {
     "c_sharp": "c-sharp",
+    "commonlisp": "common-lisp",
+    "git_config": "git-config",
+    "glimmer_javascript": "gjs",
+    "glimmer_typescript": "gts",
+    "godot_resource": "godot-resource",
+    "haskell_persistent": "haskell-persistent",
     "janet_simple": "janet",
     "ocaml_interface": "ocaml-interface",
     "php_only": "php-only",
     "proto": "protobuf",
+    "ql": "codeql",
+    "query": "tsq",
 }
 
 # The directive as hume-grammar-build's query resolver reads it.
@@ -59,6 +69,10 @@ TOP_LEVEL_KEYS = {"use-grammars", "language-server", "language", "grammar"}
 HEADER = re.compile(r"\[\[?([^\]]+)\]\]?")
 
 CONTEXT_FILE = "context.scm"
+FOLDS_FILE = "folds.scm"
+
+# Where a folder's files come from, as source.toml's [upstream] keys.
+ORIGINS = ("helix", "context", "folds")
 
 
 def git_grammars(doc: dict) -> dict[str, dict]:
@@ -162,8 +176,8 @@ def split_languages_toml(text: str, doc: dict) -> tuple[str, dict[str, str]]:
     return servers_text, blocks
 
 
-def helix_name(context_name: str) -> str:
-    return CONTEXT_NAMES.get(context_name, context_name)
+def helix_name(nvim_name: str) -> str:
+    return NVIM_NAMES.get(nvim_name, nvim_name)
 
 
 def rewrite_inherits(text: str) -> str:
@@ -181,10 +195,18 @@ def parents(text: str) -> set[str]:
 @dataclass
 class Folder:
     """One folder of languages/: its query files and language.toml by file
-    name, and its grammar pin."""
+    name, its grammar pin, and whether its folds.scm is nvim-treesitter's."""
 
     files: dict[str, str] = field(default_factory=dict)
     grammar: dict | None = None
+    nvim_folds: bool = False
+
+    def origin(self, file: str) -> str:
+        if file == CONTEXT_FILE:
+            return "context"
+        if file == FOLDS_FILE and self.nvim_folds:
+            return "folds"
+        return "helix"
 
 
 def query_files(directory: Path) -> dict[str, str]:
@@ -195,10 +217,29 @@ def query_files(directory: Path) -> dict[str, str]:
     }
 
 
-def upstream_tree(helix: Path, context: Path) -> tuple[dict[str, Folder], str, list[str]]:
-    """The folders a snapshot of the two checkouts holds, the
-    language-server region, and the context languages Helix has no folder
-    for."""
+def nvim_queries(root: Path, file: str, tree: dict[str, Folder]) -> tuple[dict[str, str], list[str]]:
+    """`{folder: text}` for each `<dir>/<file>` under `root` whose language
+    has a folder in `tree`, its `; inherits:` names mapped to Helix's, and
+    the languages without one."""
+    found, skipped = {}, []
+    for directory in sorted(path for path in root.iterdir() if path.is_dir()):
+        source = directory / file
+        if not source.is_file():
+            continue
+        name = helix_name(directory.name)
+        if name not in tree:
+            skipped.append(directory.name)
+            continue
+        found[name] = rewrite_inherits(source.read_text(encoding="utf-8"))
+    return found, skipped
+
+
+def upstream_tree(
+    helix: Path, context: Path, folds: Path
+) -> tuple[dict[str, Folder], str, list[str], list[str]]:
+    """The folders a snapshot of the three checkouts holds, the
+    language-server region, and the context and folds languages Helix has
+    no folder for."""
     text = (helix / "languages.toml").read_text(encoding="utf-8")
     doc = tomllib.loads(text)
     servers_text, blocks = split_languages_toml(text, doc)
@@ -218,31 +259,29 @@ def upstream_tree(helix: Path, context: Path) -> tuple[dict[str, Folder], str, l
     for name, pin in pins.items():
         tree[name].grammar = pin
 
-    skipped = []
-    for directory in sorted(path for path in (context / "queries").iterdir() if path.is_dir()):
-        source = directory / CONTEXT_FILE
-        if not source.is_file():
-            continue
-        name = helix_name(directory.name)
-        if name not in tree:
-            skipped.append(directory.name)
-            continue
-        tree[name].files[CONTEXT_FILE] = rewrite_inherits(source.read_text(encoding="utf-8"))
+    contexts, skipped_context = nvim_queries(context / "queries", CONTEXT_FILE, tree)
+    for name, text in contexts.items():
+        tree[name].files[CONTEXT_FILE] = text
+    nvim_folds, skipped_folds = nvim_queries(folds / "runtime" / "queries", FOLDS_FILE, tree)
+    for name, text in nvim_folds.items():
+        tree[name].files[FOLDS_FILE] = text
+        tree[name].nvim_folds = True
 
     for name in tree:
         if not LANGUAGE_NAME.fullmatch(name):
             sys.exit(f"error: folder name '{name}' does not match {LANGUAGE_NAME.pattern}")
-    return tree, servers_text, skipped
+    return tree, servers_text, skipped_context, skipped_folds
 
 
-def fingerprints(tree: dict[str, Folder]) -> dict[str, tuple[str, str | None]]:
-    """Each folder's Helix and context fingerprints: a hash of its files of
-    that origin and of the same fingerprints of every folder it inherits
-    from. The context fingerprint is None without a context.scm."""
-    memo: dict[tuple[str, bool], str | None] = {}
+def fingerprints(tree: dict[str, Folder]) -> dict[str, dict[str, str | None]]:
+    """Each folder's fingerprint per origin: a hash of its files of that
+    origin and of the fingerprint each of them inherits, the parent's
+    origin for the same file. Helix's covers the grammar pin too. A
+    fingerprint is None for an origin with no file."""
+    memo: dict[tuple[str, str], str | None] = {}
 
-    def fingerprint(name: str, is_context: bool, chain: tuple[str, ...]) -> str | None:
-        key = (name, is_context)
+    def fingerprint(name: str, origin: str, chain: tuple[str, ...]) -> str | None:
+        key = (name, origin)
         if key in memo:
             return memo[key]
         if name in chain:
@@ -250,20 +289,24 @@ def fingerprints(tree: dict[str, Folder]) -> dict[str, tuple[str, str | None]]:
         folder = tree.get(name)
         if folder is None:
             return None
-        own = {f: t for f, t in folder.files.items() if (f == CONTEXT_FILE) == is_context}
-        if is_context and not own:
+        own = {f: t for f, t in folder.files.items() if folder.origin(f) == origin}
+        if origin != "helix" and not own:
             memo[key] = None
             return None
         digest = hashlib.sha256()
         digest.update(json.dumps(own, sort_keys=True).encode())
-        if not is_context:
+        if origin == "helix":
             digest.update(json.dumps(folder.grammar, sort_keys=True).encode())
-        for parent in sorted(set().union(*(parents(t) for t in own.values()))):
-            digest.update(f"\0{parent}\0{fingerprint(parent, is_context, chain + (name,))}".encode())
+        for file, text in sorted(own.items()):
+            for parent in sorted(parents(text)):
+                parent_folder = tree.get(parent)
+                parent_origin = parent_folder.origin(file) if parent_folder else origin
+                parent_print = fingerprint(parent, parent_origin, chain + (name,))
+                digest.update(f"\0{file}\0{parent}\0{parent_print}".encode())
         memo[key] = digest.hexdigest()
         return memo[key]
 
-    return {name: (fingerprint(name, False, ()), fingerprint(name, True, ())) for name in tree}
+    return {name: {origin: fingerprint(name, origin, ()) for origin in ORIGINS} for name in tree}
 
 
 def read_snapshot(languages: Path) -> tuple[dict[str, Folder], dict[str, dict]]:
@@ -278,7 +321,7 @@ def read_snapshot(languages: Path) -> tuple[dict[str, Folder], dict[str, dict]]:
         language = directory / "language.toml"
         if language.is_file():
             files["language.toml"] = language.read_text(encoding="utf-8")
-        tree[directory.name] = Folder(files, source.get("grammar"))
+        tree[directory.name] = Folder(files, source.get("grammar"), "folds" in source["upstream"])
         revisions[directory.name] = source["upstream"]
     return tree, revisions
 
@@ -290,7 +333,7 @@ def toml_str(value: str) -> str:
 
 def source_toml(upstream: dict, grammar: dict | None) -> str:
     lines = ["[upstream]\n"]
-    lines += [f"{key} = {toml_str(upstream[key])}\n" for key in ("helix", "context") if key in upstream]
+    lines += [f"{key} = {toml_str(upstream[key])}\n" for key in ORIGINS if key in upstream]
     if grammar is not None:
         lines.append("\n[grammar]\n")
         lines += [f"{key} = {toml_str(grammar[key])}\n" for key in ("url", "rev", "subpath", "symbol")]
@@ -303,24 +346,31 @@ class Report:
     removed: list[str]
     changed: list[str]
     skipped_context: list[str]
+    skipped_folds: list[str]
 
 
-def snapshot(helix: Path, helix_rev: str, context: Path, context_rev: str, out: Path) -> Report:
-    """Rewrite `out`'s snapshot from the two checkouts. A folder keeps the
+def snapshot(
+    helix: Path, helix_rev: str, context: Path, context_rev: str, folds: Path, folds_rev: str, out: Path
+) -> Report:
+    """Rewrite `out`'s snapshot from the three checkouts. A folder keeps the
     revision of each origin whose fingerprint did not change."""
     languages = out / "languages"
     old_tree, old_revisions = read_snapshot(languages)
     old_prints = fingerprints(old_tree)
-    tree, servers_text, skipped = upstream_tree(helix, context)
+    tree, servers_text, skipped_context, skipped_folds = upstream_tree(helix, context, folds)
     new_prints = fingerprints(tree)
+    revs = {"helix": helix_rev, "context": context_rev, "folds": folds_rev}
 
     revisions = {}
-    for name, (helix_print, context_print) in new_prints.items():
-        old_helix, old_context = old_prints.get(name, (None, None))
+    for name, prints in new_prints.items():
+        old_prints_of = old_prints.get(name, {})
         old = old_revisions.get(name, {})
-        upstream = {"helix": old["helix"] if helix_print == old_helix else helix_rev}
-        if context_print is not None:
-            upstream["context"] = old["context"] if context_print == old_context else context_rev
+        upstream = {}
+        for origin, fingerprint in prints.items():
+            if fingerprint is None:
+                continue
+            unchanged = fingerprint == old_prints_of.get(origin) and origin in old
+            upstream[origin] = old[origin] if unchanged else revs[origin]
         revisions[name] = upstream
 
     shutil.rmtree(languages, ignore_errors=True)
@@ -336,15 +386,17 @@ def snapshot(helix: Path, helix_rev: str, context: Path, context_rev: str, out: 
     shutil.rmtree(notices, ignore_errors=True)
     notices.mkdir()
     shutil.copyfile(context / "LICENSE", notices / "nvim-treesitter-context.LICENSE")
+    shutil.copyfile(folds / "LICENSE", notices / "nvim-treesitter.LICENSE")
     (out / "upstream.toml").write_text(
-        f"helix = {toml_str(helix_rev)}\ncontext = {toml_str(context_rev)}\n", encoding="utf-8"
+        "".join(f"{origin} = {toml_str(revs[origin])}\n" for origin in ORIGINS), encoding="utf-8"
     )
 
     return Report(
         added=sorted(set(tree) - set(old_tree)),
         removed=sorted(set(old_tree) - set(tree)),
         changed=sorted(name for name in set(tree) & set(old_tree) if new_prints[name] != old_prints[name]),
-        skipped_context=skipped,
+        skipped_context=skipped_context,
+        skipped_folds=skipped_folds,
     )
 
 
@@ -367,24 +419,28 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--helix", required=True, help="the Helix commit, a full 40-hex SHA")
     parser.add_argument("--context", required=True, help="the nvim-treesitter-context commit, a full 40-hex SHA")
+    parser.add_argument("--folds", required=True, help="the nvim-treesitter commit, a full 40-hex SHA")
     parser.add_argument("--into", required=True, type=Path, help="a worktree of the upstream branch")
     args = parser.parse_args()
-    for flag, rev in (("--helix", args.helix), ("--context", args.context)):
+    for flag, rev in (("--helix", args.helix), ("--context", args.context), ("--folds", args.folds)):
         if not FULL_REV.fullmatch(rev):
             sys.exit(f"error: {flag} '{rev}' is not a full commit SHA")
 
     with tempfile.TemporaryDirectory(prefix="import-upstream") as work:
         helix = Path(work) / "helix"
         context = Path(work) / "context"
+        folds = Path(work) / "folds"
         checkout(HELIX_URL, args.helix, helix, "runtime/queries")
         checkout(CONTEXT_URL, args.context, context, "queries")
-        report = snapshot(helix, args.helix, context, args.context, args.into)
+        checkout(FOLDS_URL, args.folds, folds, "runtime/queries")
+        report = snapshot(helix, args.helix, context, args.context, folds, args.folds, args.into)
 
     for label, names in (
         ("added", report.added),
         ("removed", report.removed),
         ("changed", report.changed),
         ("context languages Helix has no folder for", report.skipped_context),
+        ("folds languages Helix has no folder for", report.skipped_folds),
     ):
         print(f"{label} ({len(names)}): {' '.join(names)}")
 

@@ -14,7 +14,8 @@ pub(crate) struct Manifest<'a> {
     pub(crate) platform: &'a str,
     /// The release tag of the tool that built the archive.
     pub(crate) tag: &'a str,
-    /// The Helix commit every query file but `context.scm` comes from.
+    /// The Helix commit the query files come from, but `context.scm` and
+    /// the queries `queries/NOTICE` names as nvim-treesitter's.
     pub(crate) helix_rev: &'a str,
 }
 

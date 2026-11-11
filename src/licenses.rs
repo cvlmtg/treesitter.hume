@@ -3,6 +3,7 @@
 //! and the notice of its query files: where they come from and their
 //! licenses.
 
+use std::collections::BTreeSet;
 use std::fmt;
 use std::fs;
 use std::io;
@@ -15,8 +16,10 @@ use crate::languages::{ContextOrigin, Origin, Pin};
 
 const HELIX_URL: &str = "https://github.com/helix-editor/helix";
 const CONTEXT_URL: &str = "https://github.com/nvim-treesitter/nvim-treesitter-context";
+const FOLDS_URL: &str = "https://github.com/nvim-treesitter/nvim-treesitter";
 const REPO_URL: &str = "https://github.com/cvlmtg/treesitter.hume";
 const CONTEXT_LICENSE: &str = include_str!("../notices/nvim-treesitter-context.LICENSE");
+const FOLDS_LICENSE: &str = include_str!("../notices/nvim-treesitter.LICENSE");
 const REPO_LICENSE: &str = include_str!("../LICENSE");
 
 static LICENSE_NAME: LazyLock<Regex> = LazyLock::new(|| {
@@ -121,28 +124,51 @@ fn source_note(pin: &Pin) -> String {
 }
 
 /// The text of `queries/NOTICE` for `language`'s queries, which this
-/// repo's `tag` ships with the changes it makes to them.
-pub(crate) fn queries_notice(language: &str, origin: &Origin, tag: &str) -> String {
+/// repo's `tag` ships with the changes it makes to them. `folds` holds the
+/// nvim-treesitter commit of each folder the shipped `folds.scm` reads,
+/// its own and the ones its `; inherits:` lines name, whose `folds.scm`
+/// comes from there.
+pub(crate) fn queries_notice(
+    language: &str,
+    origin: &Origin,
+    folds: &BTreeSet<&str>,
+    tag: &str,
+) -> String {
     let helix = &origin.helix;
-    let source = match &origin.context {
+    let mut source = match &origin.context {
         Some(ContextOrigin::Upstream(context)) => format!(
             "context.scm comes from nvim-treesitter-context, {CONTEXT_URL},\n\
-             at commit {context}. The other query files come from Helix's\n\
-             runtime/queries, {HELIX_URL}, at commit {helix}.\n"
+             at commit {context}.\n"
         ),
-        Some(ContextOrigin::Own) => format!(
-            "context.scm was written for treesitter.hume, {REPO_URL}.\n\
-             The other query files come from Helix's runtime/queries,\n\
-             {HELIX_URL}, at commit {helix}.\n"
-        ),
-        None => format!(
+        Some(ContextOrigin::Own) => {
+            format!("context.scm was written for treesitter.hume, {REPO_URL}.\n")
+        }
+        None => String::new(),
+    };
+    if !folds.is_empty() {
+        let revs: Vec<&str> = folds.iter().copied().collect();
+        source.push_str(&format!(
+            "folds.scm holds queries from nvim-treesitter, {FOLDS_URL},\n\
+             at commit {}.\n",
+            revs.join(", ")
+        ));
+    }
+    source.push_str(&if source.is_empty() {
+        format!(
             "These query files come from Helix's runtime/queries,\n\
              {HELIX_URL}, at commit {helix}.\n"
-        ),
-    };
+        )
+    } else {
+        format!(
+            "The other queries come from Helix's runtime/queries,\n\
+             {HELIX_URL}, at commit {helix}.\n"
+        )
+    });
     let mut notice = format!(
         "{source}\
-         treesitter.hume may change them. The files as shipped are in\n\
+         treesitter.hume may change them, and its build leaves out the steps\n\
+         context.scm has only for @context.end and the repetition in folds.scm.\n\
+         The files as shipped are in\n\
          {REPO_URL} at tag {tag}, in languages/{language}/ and\n\
          the folders their `; inherits:` lines name. Each `; inherits:` line is\n\
          replaced by the queries of the languages it names.\n\
@@ -160,6 +186,10 @@ pub(crate) fn queries_notice(language: &str, origin: &Origin, tag: &str) -> Stri
             notice.push_str(REPO_LICENSE);
         }
         None => {}
+    }
+    if !folds.is_empty() {
+        notice.push_str("\nThe queries from nvim-treesitter are covered by this license:\n\n");
+        notice.push_str(FOLDS_LICENSE);
     }
     notice
 }

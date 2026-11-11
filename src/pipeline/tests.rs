@@ -50,19 +50,24 @@ fn grammar_repo(extra: &[(&str, &[u8])]) -> (tempfile::TempDir, String) {
 const HELIX_REV: &str = "0123456789abcdef0123456789abcdef01234567";
 const CONTEXT_REV: &str = "fedcba9876543210fedcba9876543210fedcba98";
 
-/// `probe`'s queries: highlights that inherit `base`'s, and context and
-/// folds queries with the steps HUME's copy leaves out.
+/// `probe`'s queries: highlights and folds that inherit `base`'s, and
+/// context and folds queries with the steps HUME's copy leaves out.
 const PROBE_QUERIES: &[(&str, &str)] = &[
     ("context.scm", "(source (word) @context.end) @context\n"),
-    ("folds.scm", "(word)+ @fold\n"),
+    ("folds.scm", "; inherits: base\n(word)+ @fold\n"),
     ("highlights.scm", "; inherits: base\n(word) @variable\n"),
     ("textobjects.scm", "(word) @word.inside\n"),
 ];
 const STRING_QUERIES: &[(&str, &str)] = &[("highlights.scm", "(word) @string\n")];
 /// Queries naming a node the probe grammar does not have.
 const STALE_QUERIES: &[(&str, &str)] = &[("highlights.scm", "(function_item) @function\n")];
-const BASE_QUERIES: &[(&str, &str)] = &[("highlights.scm", "(source) @base\n")];
-const BASE_SOURCE: &str = "[upstream]\nhelix = \"0123456789abcdef0123456789abcdef01234567\"\n";
+/// `base`'s queries; its `folds.scm` comes from nvim-treesitter.
+const BASE_QUERIES: &[(&str, &str)] = &[
+    ("folds.scm", "(source) @fold\n"),
+    ("highlights.scm", "(source) @base\n"),
+];
+const FOLDS_REV: &str = "89abcdef0123456789abcdef0123456789abcdef";
+const BASE_SOURCE: &str = "[upstream]\nhelix = \"0123456789abcdef0123456789abcdef01234567\"\nfolds = \"89abcdef0123456789abcdef0123456789abcdef\"\n";
 
 /// The `source.toml` of a language pinned to `url` at `rev`, with context
 /// queries when `context` is set.
@@ -206,7 +211,12 @@ fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
         "\n(source) @base\n\n(word) @variable\n"
     );
     assert_eq!(text(&probe, "queries/context.scm"), "(source) @context\n");
-    assert_eq!(text(&probe, "queries/folds.scm"), "(word) @fold\n");
+    assert_eq!(
+        text(&probe, "queries/folds.scm"),
+        "\n(source) @fold\n\n(word) @fold\n"
+    );
+    assert!(notice.contains(FOLDS_REV), "{notice}");
+    assert!(notice.contains("Apache License"), "{notice}");
     let manifest = text(&probe, "manifest.scm");
     for field in [
         "(name . \"probe\")",
@@ -221,6 +231,7 @@ fn a_build_packs_each_language_with_its_library_queries_and_manifest() {
     let twin = files(&member(out.path(), "twin"));
     assert_eq!(text(&twin, "queries/highlights.scm"), "(word) @string\n");
     assert!(!text(&twin, "queries/NOTICE").contains(CONTEXT_REV));
+    assert!(!text(&twin, "queries/NOTICE").contains(FOLDS_REV));
     assert_eq!(
         listing(out.path()),
         ["c.tar.gz", "probe.tar.gz", "twin.tar.gz"]
