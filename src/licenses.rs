@@ -168,10 +168,9 @@ pub(crate) fn queries_notice(
         "{source}\
          treesitter.hume may change them, and its build leaves out the steps\n\
          context.scm has only for @context.end and the repetition in folds.scm.\n\
-         The files as shipped are in\n\
-         {REPO_URL} at tag {tag}, in languages/{language}/ and\n\
-         the folders their `; inherits:` lines name. Each `; inherits:` line is\n\
-         replaced by the queries of the languages it names.\n\
+         The files as shipped are in {REPO_URL} at tag {tag},\n\
+         in languages/{language}/ and the folders their `; inherits:` lines name.\n\
+         Each `; inherits:` line is replaced by the queries of the languages it names.\n\
          \n\
          The files from Helix are covered by the Mozilla Public License 2.0,\n\
          which you can get at https://mozilla.org/MPL/2.0/.\n"
