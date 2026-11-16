@@ -60,5 +60,12 @@
 (function_signature_item
   name: (identifier) @_)
 
+(macro_invocation
+  macro: [
+    (identifier) @_
+    (scoped_identifier
+      name: (identifier) @_)
+  ])
+
 ; == other ==
 (enum_variant (identifier) @_)
