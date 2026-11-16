@@ -250,15 +250,21 @@ fn package(
             Some(text.to_string())
         })
         .map_err(|e: QueryError| format!("{file}: {e}"))?;
+        for parent in &resolved.missing {
+            warnings.push(format!("{file} inherits {parent:?}, which has no {file}"));
+        }
+        // HUME warns about a query file naming nothing on each session's
+        // first load of the grammar.
+        if resolved.is_blank() {
+            warnings.push(format!("{file} resolves to nothing and is left out"));
+            continue;
+        }
         if file == "folds.scm" {
             folds = read_from
                 .into_inner()
                 .iter()
                 .filter_map(|folder| request.queries.folds_rev(folder))
                 .collect();
-        }
-        for parent in resolved.missing {
-            warnings.push(format!("{file} inherits {parent:?}, which has no {file}"));
         }
         let text =
             queries::rewrite::for_hume(file, &resolved.text).map_err(|e| format!("{file}: {e}"))?;

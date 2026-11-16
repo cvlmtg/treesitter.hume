@@ -15,6 +15,18 @@ fn resolved(language: &str, files: &[(&str, &str)]) -> Resolved {
 }
 
 #[test]
+fn a_query_inheriting_only_parents_without_the_file_is_blank() {
+    let query = resolved("x", &[("x", "; inherits: gone\n;; a note\n\n")]);
+    assert!(query.is_blank());
+}
+
+#[test]
+fn a_query_with_a_pattern_is_not_blank() {
+    let query = resolved("x", &[("x", "; inherits: gone\n(x) @x ; a note\n")]);
+    assert!(!query.is_blank());
+}
+
+#[test]
 fn a_query_without_a_directive_is_unchanged() {
     let query = resolved("c", &[("c", "(identifier) @variable\n")]);
     assert_eq!(query.text, "(identifier) @variable\n");

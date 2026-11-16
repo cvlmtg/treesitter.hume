@@ -50,12 +50,14 @@ fn grammar_repo(extra: &[(&str, &[u8])]) -> (tempfile::TempDir, String) {
 const HELIX_REV: &str = "0123456789abcdef0123456789abcdef01234567";
 const CONTEXT_REV: &str = "fedcba9876543210fedcba9876543210fedcba98";
 
-/// `probe`'s queries: highlights and folds that inherit `base`'s, and
-/// context and folds queries with the steps HUME's copy leaves out.
+/// `probe`'s queries: highlights and folds that inherit `base`'s, context
+/// and folds queries with the steps HUME's copy leaves out, and indents that
+/// only inherit `base`'s, which it has none of.
 const PROBE_QUERIES: &[(&str, &str)] = &[
     ("context.scm", "(source (word) @context.end) @context\n"),
     ("folds.scm", "; inherits: base\n(word)+ @fold\n"),
     ("highlights.scm", "; inherits: base\n(word) @variable\n"),
+    ("indents.scm", "; inherits: base\n"),
     ("textobjects.scm", "(word) @word.inside\n"),
 ];
 const STRING_QUERIES: &[(&str, &str)] = &[("highlights.scm", "(word) @string\n")];

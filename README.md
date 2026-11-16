@@ -35,7 +35,9 @@ Each `<language>.tar.gz` holds:
 - `queries/`, the language's query files with `; inherits:` already
   resolved: `context.scm`, when there is one, from nvim-treesitter-context
   or written here, `folds.scm` from nvim-treesitter when it has one, and
-  the others from Helix. Each compiles against the grammar beside it. `context.scm` ships without the steps only its
+  the others from Helix. Each compiles against the grammar beside it, and
+  a file that would be empty, inheriting only from languages without it, is
+  left out. `context.scm` ships without the steps only its
   `@context.end` capture needs, and `folds.scm` without repetition (`+`
   dropped, `*` read as `?`): HUME uses neither, and both slow a query
   down in a node with many children;

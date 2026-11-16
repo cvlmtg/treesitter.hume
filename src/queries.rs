@@ -21,6 +21,17 @@ pub(crate) struct Resolved {
     pub(crate) missing: Vec<String>,
 }
 
+impl Resolved {
+    /// Whether the file holds nothing but blank lines and comments, as one
+    /// whose every parent has no file of its name does.
+    pub(crate) fn is_blank(&self) -> bool {
+        self.text.lines().all(|line| {
+            let line = line.trim();
+            line.is_empty() || line.starts_with(';')
+        })
+    }
+}
+
 #[derive(Debug)]
 pub(crate) enum QueryError {
     Missing(String),
